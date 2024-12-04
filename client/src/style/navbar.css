@@ -1,0 +1,43 @@
+.navbar {
+    padding: 20px;
+    display: flex;
+    max-width: 1000px;
+    margin: 0 auto;
+    border-bottom: 1px solid #f2f2f2;
+  }
+  .navbar h1 {
+    color: #18a982;
+  }
+  .navbar .links {
+    margin-left: auto;
+  }
+  .navbar a {
+    margin-left: 16px;
+    text-decoration: none;
+    padding: 6px;
+  }
+  .navbar a:hover {
+    color: #18a982;
+  }
+  
+  .navbar .welcome {
+    flex: 1; /* Take up available space between the title and links */
+    text-align: center; /* Center the text within this space */
+    font-size: 18px;
+    color: #333; /* Optional: Adjust color if needed */
+  }
+ 
+  .exitButton {
+    background-color: #f1356d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 16px;
+    font-size: 14px;
+}
+
+.exitButton:hover {
+    background-color: #d72554;
+}

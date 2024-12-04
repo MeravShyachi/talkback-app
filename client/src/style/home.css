@@ -1,0 +1,74 @@
+/* Home Page */
+.home {
+    padding: 20px;
+    display: flex;
+    justify-content: center; /* Center the contactContainer horizontally */
+  }
+  
+  /* Contact Container */
+  .contactContainer {
+    background-color: #fff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+    height: 700px;
+    width: 400px;
+    padding: 20px;
+    border-radius: 10px; /* Optional: Adds rounded corners */
+  }
+  
+  /* Contacts Section */
+  .contacts {
+    padding: 20px;
+  }
+  
+  /* Online Contacts */
+  .onlineContacts ul {
+    list-style: none; /* Remove bullets */
+    padding: 0;
+    margin: 0;
+  }
+  
+  .onlineContacts ul li {
+    text-align: left; /* Align text to the left */
+    padding: 10px 0; /* Spacing between contacts */
+    border-bottom: 1px solid #ddd; /* Line under each contact */
+    font-size: 20px; /* Adjust font size */
+  }
+  
+  /* Offline Contacts */
+  .offlineContacts ul {
+    list-style: none; /* Remove bullets */
+    padding: 0;
+    margin: 0;
+  }
+  
+  /* Offline Contacts */
+  .offlineContacts ul li {
+    text-align: left; /* Align text to the left */
+    padding: 10px 0; /* Spacing between contacts */
+    border-bottom: 1px solid #ddd; /* Line under each contact */
+    font-size: 20px; /* Adjust font size */
+  }
+  
+  .contactItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Ensures items align to the left and right */
+    padding: 8px 0;
+  }
+  
+  .contactActions {
+    display: flex;
+    gap: 8px; /* Adds space between the buttons */
+  }
+  
+  .actionButton {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+  
+  .actionImage {
+    width: 40px; /* Adjust size */
+    height: 40px;
+  }
