@@ -17,7 +17,9 @@ const Navbar = ({ action, toggleTitleAndAction }) => {
                 {action === "Logout" ? <h2>Welcome {username}!</h2>: ""}
             </div>
             <div className="links">
-                <Link to="/" onClick={toggleTitleAndAction}>{action}</Link>
+                {(location.pathname !== "/chat" && location.pathname !== "/game") && (
+                    <Link to="/" onClick={toggleTitleAndAction}>{action}</Link>
+                )}
                 {(location.pathname === "/chat" || location.pathname === "/game") && (
                     <button onClick={handleExit} className="exitButton">
                         Exit

@@ -1,18 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import chatIcon from "./assets/images/chatIcon.jpg";
 import diceIcon from "./assets/images/diceIcon.jpg";
 import "./style/home.css";
+import axios from "axios";
 
 
 const Home = () => {
 
-    const [Contacts, setContacts] = useState([
-        { id: 1, name: "Alice", isOnline: true },
-        { id: 2, name: "Bob", isOnline: true},
-        { id: 3, name: "Charlie", isOnline: true },
-        { id: 4, name: "David", isOnline: false },
-    ]);
+    const [Contacts, setContacts] = useState([]);
+    
+    //async-await
+    const getPeople = async() => {
+        try {
+            const res = await axios.get("http://localhost:4000/people");
+            setContacts(res.data);
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
+    useEffect(() => {
+        getPeople();
+    }, [])
+    
       
     const handleChatButton = (e) => {
         e.preventDefault(); //prevent reload of the page.
