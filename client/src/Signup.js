@@ -5,7 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 
-const LoginSignup = ({ title, onFormSubmit }) => {
+const LoginSignup = ({ onFormSubmit }) => {
   
   const [values, setValues] = useState({
     username: "",
@@ -30,32 +30,30 @@ const LoginSignup = ({ title, onFormSubmit }) => {
   const handleValidation = () =>{
     const {username, password, confirmPassword} = values;
     // validation for signup page:
-    if(title==="Signup"){ 
-      if(password !== confirmPassword){
-        toast.error(
-          "Password and confirm password should be the same.",
-          toastOptions
-          );
-          return false;
-      }
-      else if(username.length<3){
-        toast.error(
-          "Username should be greater than 3 characters.",
-          toastOptions
+
+    if(password !== confirmPassword){
+      toast.error(
+        "Password and confirm password should be the same.",
+        toastOptions
         );
         return false;
-      }
-      else if(password.length<8){
-        toast.error(
-          "Password should be equal or grater than 8 characters.",
-          toastOptions
-        );
-        return false;
-      }
-      return true;
     }
-    // validation for Login page: TODO
+    else if(username.length<3){
+      toast.error(
+        "Username should be greater than 3 characters.",
+        toastOptions
+      );
+      return false;
+    }
+    else if(password.length<8){
+      toast.error(
+        "Password should be equal or grater than 8 characters.",
+        toastOptions
+      );
+      return false;
+    }
     return true;
+    
   }
 
   const handleSubmit = (e) => {
@@ -68,7 +66,7 @@ const LoginSignup = ({ title, onFormSubmit }) => {
 
   return (
     <div className="loginSignup">
-        <h1>{title}</h1>
+        <h1>Signup</h1>
         <form onSubmit={handleSubmit}>
             <label>Username:</label>
             <input 
@@ -84,7 +82,6 @@ const LoginSignup = ({ title, onFormSubmit }) => {
               required
               onChange={(e) => handleInputChange(e)}
             />
-            {title === "Signup" && 
             <div>
               <label>Confirm Password</label>
               <input              
@@ -93,7 +90,6 @@ const LoginSignup = ({ title, onFormSubmit }) => {
               required
               onChange={(e) => handleInputChange(e)}/>
             </div>
-            }
             <button type="submit">Submit</button>
         </form>
         <ToastContainer/>
