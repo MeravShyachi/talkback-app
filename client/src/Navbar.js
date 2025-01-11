@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import "./style/navbar.css";
 
-const Navbar = ({ }) => {
+const Navbar = () => {
     const username = localStorage.getItem("username");
     const token = localStorage.getItem("authToken")
 

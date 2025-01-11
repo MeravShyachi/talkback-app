@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import "./style/loginSignup.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 
-const LoginSignup = ({ onFormSubmit }) => {
+
+const Signup = ({ onFormSubmit }) => {
   
   const [values, setValues] = useState({
     username: "",
@@ -59,8 +61,20 @@ const LoginSignup = ({ onFormSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault(); //prevent reload of the page.
     if(handleValidation()){
-      onFormSubmit(values.username); // Call onFormSubmit to set the action to "Logout"
-      navigate("/home")
+      axios.post("http://localhost:4000/signup", { username: values.username, password: values.password })
+      .then(response => {
+          console.log('Registration successful:', response.data);
+          onFormSubmit(values.username)
+          navigate("/home")
+      })
+      .catch(error => {
+          if (error.response && error.response.data) {
+              console.error('Error during registration:', error.response.data.message);
+              toast.error(error.response.data.message, toastOptions); // Display error message to the user
+          } else {
+              console.error('Unknown error:', error);
+          }
+      });
     }
   };
 
@@ -97,5 +111,5 @@ const LoginSignup = ({ onFormSubmit }) => {
   );
 }
  
-export default LoginSignup;
+export default Signup;
 
