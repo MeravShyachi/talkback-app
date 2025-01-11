@@ -1,6 +1,6 @@
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import Navbar from './Navbar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Signup from './Signup';
 import Login from './Login';
 import Home from './Home';
@@ -11,17 +11,11 @@ function App() {
 
    const [username, setUsername] = useState('');
 
-  //const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-
 
   // Function to handle form submission
   const handleFormSubmit =  (name) => {
-    
-    //setIsLoggedIn(true)
     setUsername(name)
   
-    
     // Save state to localStorage
     localStorage.setItem("authToken", "loggedin");
     localStorage.setItem("username", name);
