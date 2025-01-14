@@ -61,7 +61,10 @@ const Signup = ({ onFormSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault(); //prevent reload of the page.
     if(handleValidation()){
-      axios.post("http://localhost:4000/signup", { username: values.username, password: values.password })
+      axios.post("http://localhost:4000/signup",
+      { username: values.username, password: values.password },
+      { withCredentials: true // Send cookies with requests
+      })
       .then(response => {
           console.log('Registration successful:', response.data);
           onFormSubmit(values.username)
