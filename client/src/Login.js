@@ -5,7 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
-const Login = ({ onFormSubmit }) => {
+const Login = ({ setUsername }) => {
   
     const [values, setValues] = useState({
       username: "",
@@ -55,7 +55,7 @@ const Login = ({ onFormSubmit }) => {
           })
           .then(response => {
               console.log('Login successful:', response.data);
-              onFormSubmit(values.username)
+              setUsername(values.username)
               navigate("/home")
           })
           .catch(error => {

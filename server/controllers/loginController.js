@@ -1,9 +1,9 @@
-const User = require('../model/User');
-const bcrypt = require('bcrypt');
-const {createToken} = require("../middleware/JWT");
+import User from "../model/User.js";
+import bcrypt from "bcrypt";
+import {createToken} from "../middleware/JWT.js";
 
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
     try {
         // Find the user with the same username in the DB 
         let user = await User.findOne({username: req.body.username});
@@ -38,4 +38,3 @@ const login = async (req, res) => {
 };
 
 
-module.exports= {login}

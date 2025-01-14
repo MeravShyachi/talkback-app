@@ -10,27 +10,24 @@ import Game from './Game';
 
 function App() {
 
-   const [username, setUsername] = useState('');
+   const [username, setUsername] = useState(null);
 
 
   // Function to handle form submission
-  const handleFormSubmit =  (name) => {
-    setUsername(name)
-  
-    // Save state to localStorage
-    localStorage.setItem("authToken", "loggedin");
-    localStorage.setItem("username", name);
-  };
+  // const handleFormSubmit =  (name) => {
+  //   setUsername(name)
+
+  // };
 
   return (
     <div className="App">
       <Router>
         <div className="App">
-          <Navbar />
+          <Navbar username={username} setUsername={setUsername}/>
           <div className="content">
             <Routes>
-              <Route path="/" element={<Login onFormSubmit={handleFormSubmit} username={username}/>} />
-              <Route path="/signup" element={<Signup onFormSubmit={handleFormSubmit} username={username}/>} />
+              <Route path="/" element={<Login setUsername={setUsername}/>} />
+              <Route path="/signup" element={<Signup  setUsername={setUsername}/>} />
               <Route path="/home" element={<Home/>}/>
               <Route path="/chat" element={<Chat/>}/>
               <Route path="/game" element={<Game/>}/>

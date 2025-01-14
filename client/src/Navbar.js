@@ -1,39 +1,25 @@
 import { Link, useLocation } from "react-router-dom";
+import { logout } from "./Logout";
 import "./style/navbar.css";
 
-const Navbar = () => {
-    const username = localStorage.getItem("username");
-    const token = localStorage.getItem("authToken")
-
+const Navbar = ({username, setUsername}) => {
     const location = useLocation(); // Get the current route
 
     const handleExit = () => {
         window.close(); // Close the current tab
     };
-
-    const handleLogout = () => {
-        // Clear the localStorage and update state
-        localStorage.removeItem("authToken");
-    };
     
     return (
         <nav className="navbar">
             <h1>Sela TalkBack</h1>
-            {token === null && 
-                <div className="links">
-                    <Link className={location.pathname === "/" ? "selectedLink" : ""} to="/">Login</Link>
-                    <Link className={location.pathname === "/signup" ? "selectedLink" : ""} to="/signup">Signup</Link>
-                </div>
-            }
-
-            {token !== null &&
+            {username ? (
             <>
                 <div className="welcome">
                     <h2>Welcome {username}!</h2>
                 </div>
                 <div className="links">
                     {location.pathname === "/home" && (      
-                        <Link to="/" onClick={handleLogout}>Logout</Link>   
+                        <Link to="/" onClick={logout}>Logout</Link>   
                     )}
                     {(location.pathname === "/chat" || location.pathname === "/game") && (
                         <button onClick={handleExit} className="exitButton">
@@ -42,7 +28,12 @@ const Navbar = () => {
                     )}    
                 </div>
             </>
-            }
+            ) : (
+                <div className="links">
+                    <Link className={location.pathname === "/" ? "selectedLink" : ""} to="/">Login</Link>
+                    <Link className={location.pathname === "/signup" ? "selectedLink" : ""} to="/signup">Signup</Link>
+                </div>
+            )}
         </nav>
     );
 }

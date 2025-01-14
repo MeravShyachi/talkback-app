@@ -1,16 +1,13 @@
-const express = require('express');
+import express from "express";
+import {signup} from '../controllers/signupController.js';
+import {login} from '../controllers/loginController.js';
+import {logout} from '../controllers/logoutController.js';
+
 const router = express.Router();
-const signupController = require('../controllers/signupController')
-const loginController = require('../controllers/loginController')
-const logoutController = require('../controllers/logoutController')
+
+router.post('/signup', signup);
+router.post('/login', login)
+router.get('/logout', logout)
 
 
-router.post('/signup', signupController.signup);
-router.post('/login', loginController.login)
-// router.get('/logout', logoutController.logout)
-
-
-
-
-
-module.exports = router; 
+export default router; 

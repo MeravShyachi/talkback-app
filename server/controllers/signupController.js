@@ -1,7 +1,7 @@
-const User = require('../model/User');
-const {createToken} = require("../middleware/JWT");
+import User from "../model/User.js";
+import {createToken} from "../middleware/JWT.js";
 
-const signup = async (req, res)=>{
+export const signup = async (req, res)=>{
 
     let username = req.body.username;
     let password = req.body.password;
@@ -34,5 +34,3 @@ const signup = async (req, res)=>{
     }
     
 }
-
-module.exports = {signup}

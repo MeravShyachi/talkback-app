@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt')
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 
 const schema = mongoose.Schema({
@@ -12,6 +12,10 @@ const schema = mongoose.Schema({
         type: String,
         required: true,
         minlength: 6
+    },
+    isConnected: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -21,4 +25,4 @@ schema.pre('save', async function (next){
     next();
 });
 
-module.exports = mongoose.model("User", schema)
+export default mongoose.model("User", schema)

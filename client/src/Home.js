@@ -3,6 +3,7 @@ import chatIcon from "./assets/images/chatIcon.jpg";
 import diceIcon from "./assets/images/diceIcon.jpg";
 import "./style/home.css";
 import axios from "axios";
+//import { socket } from "./utils/socket.js";
 
 
 const Home = () => {
