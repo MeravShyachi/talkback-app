@@ -1,6 +1,6 @@
 const User = require('../model/User');
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt');
+const {createToken} = require("../middleware/JWT");
 
 
 const login = async (req, res) => {
@@ -21,11 +21,7 @@ const login = async (req, res) => {
             return res.status(401).json({ message: 'Incorrect password or username.' });
         }
         
-        const accessToken = jwt.sign(
-            { _id: user._id, username: user.username },
-            process.env.ACCESS_TOKEN_SECRET,
-            { expiresIn: '2m' }
-        );
+        const accessToken = createToken(user);
 
         res.cookie('userToken', accessToken, {
             maxAge: 3600000, // 1 hour

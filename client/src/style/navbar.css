@@ -19,7 +19,18 @@
   .navbar a:hover {
     color: #18a982;
   }
-  
+  .navbar .selectedLink{
+    margin-left: 16px; /* Ensure consistent spacing with other links */
+    padding: 8px 12px; /* Slightly larger padding for active links */
+    border-radius: 5px;
+    background-color: #ade7d6; /* Background color for active link */
+    color: #333; /* Ensure text remains readable */
+    font-weight: bold; /* Optional: Highlight the active link */
+  }
+  .navbar .selectedLink:hover {
+    background-color: #96d9c3; /* Slightly darker shade for hover */
+    color: #333;
+  }
   .navbar .welcome {
     flex: 1; /* Take up available space between the title and links */
     text-align: center; /* Center the text within this space */

@@ -21,8 +21,8 @@ const Navbar = () => {
             <h1>Sela TalkBack</h1>
             {token === null && 
                 <div className="links">
-                    <Link to="/">Login</Link>
-                    <Link to="/signup">Signup</Link>
+                    <Link className={location.pathname === "/" ? "selectedLink" : ""} to="/">Login</Link>
+                    <Link className={location.pathname === "/signup" ? "selectedLink" : ""} to="/signup">Signup</Link>
                 </div>
             }
 

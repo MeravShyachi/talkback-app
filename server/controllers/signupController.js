@@ -1,4 +1,5 @@
 const User = require('../model/User');
+const {createToken} = require("../middleware/JWT");
 
 const signup = async (req, res)=>{
 
@@ -12,6 +13,14 @@ const signup = async (req, res)=>{
 
     try {
         await user.save();
+        const accessToken = createToken(user);
+
+        res.cookie('userToken', accessToken, {
+            maxAge: 3600000, // 1 hour
+            httpOnly: true, // Prevent client-side access for security
+            secure: false, // Set true for HTTPS-only
+        });
+        
         res.status(201).json(user); // Send created user back with status 201
     } 
     catch (error) {
