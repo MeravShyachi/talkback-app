@@ -3,12 +3,16 @@ import chatIcon from "./assets/images/chatIcon.jpg";
 import diceIcon from "./assets/images/diceIcon.jpg";
 import "./style/home.css";
 import axios from "axios";
-//import { socket } from "./utils/socket.js";
+import { useNavigate } from "react-router-dom";
+import { verifyToken } from "./utils/jwtAuth.js";
+import { socket } from "./utils/socket.js";
 
 
 const Home = () => {
 
     const [Contacts, setContacts] = useState([]);
+    const navigate = useNavigate();
+
     
     //async-await
     const getPeople = async() => {
@@ -20,9 +24,22 @@ const Home = () => {
         }
     }
 
+
     useEffect(() => {
-        getPeople();
-    }, [])
+        let username = "";
+        const checkToken = async() =>{
+            const isVerify = await verifyToken();
+            console.log("is verify?:", isVerify);
+            if(isVerify){
+                username = isVerify;
+                getPeople();
+            }
+            else {
+                navigate("/");
+            }
+        };
+        checkToken();
+    }, [navigate])
     
       
     const handleChatButton = (e) => {

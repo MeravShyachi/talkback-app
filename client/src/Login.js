@@ -5,7 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 
-const Login = ({ setUsername }) => {
+const Login = () => {
   
     const [values, setValues] = useState({
       username: "",
@@ -46,26 +46,25 @@ const Login = ({ setUsername }) => {
         return true;
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async(e) => {
         e.preventDefault(); //prevent reload of the page.
         if(handleValidation()){
-          axios.post("http://localhost:4000/login",
-            { username: values.username, password: values.password },
-            { withCredentials: true // Send cookies with requests
-          })
-          .then(response => {
-              console.log('Login successful:', response.data);
-              setUsername(values.username)
+          try{
+            const {data} = await axios.post("http://localhost:4000/login",
+              { username: values.username,
+                 password: values.password
+              },{withCredentials: true});
+              console.log('Registration successful:', data.user);
               navigate("/home")
-          })
-          .catch(error => {
-              if (error.response && error.response.data) {
-                  console.error('Error during login:', error.response.data.message);
-                  toast.error(error.response.data.message, toastOptions); // Display error message to the user
-              } else {
-                  console.error('Unknown error:', error);
-              }
-          });
+          }
+          catch(error){
+            if (error.response && error.response.data) {
+              console.error('Error during login:', error.response.data.message);
+              toast.error(error.response.data.message, toastOptions); // Display error message to the user
+            } else {
+                console.error('Unknown error:', error);
+            }
+          }
         }
     };
     

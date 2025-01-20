@@ -11,29 +11,35 @@ dotenv.config();
 connectDB();
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-    cors: '*' //let all the ports access
-})
 
-io.on('connection', (socket) => {
-    console.log("user connected");
-})
-
-
-
-app.use(cors({
-    origin: 'http://localhost:3000', // Your frontend URL
-    credentials: true // Allow cookies
-}));
 app.use(express.json());
 app.use(cookieParser());
+
+app.use(cors({
+    origin: 'http://localhost:3000', // frontend URL
+    credentials: true // Allow cookies
+}));
+
 
 import userRoutes from './routes/users.js';
 import authRoutes from './routes/auth.js';
 
 app.use('/', userRoutes);
 app.use('/', authRoutes);
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: '*' //let all the ports access
+});
+
+
+
+io.on('connection', (socket) => {
+
+})
+
+
+
 
 
 

@@ -21,15 +21,24 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: 'Incorrect password or username.' });
         }
         
-        const accessToken = createToken(user);
+        // Update the user's isConnected field to true
+        user.isConnected = true;
+
+        // Save the user with updated isConnected field
+        await user.save();
+
+        const accessToken = await createToken(user);
+        //console.log(accessToken);
 
         res.cookie('userToken', accessToken, {
             maxAge: 3600000, // 1 hour
             httpOnly: true, // Prevent client-side access for security
-            secure: false, // Set true for HTTPS-only
+            secure: false
         });
+    
 
-        return res.status(200).json({ message: 'Login successful.', token: accessToken });
+
+        return res.status(200).json({ message: 'Login successful.', user });
       
     } catch (error) {
         console.error('Error during login:', error);
