@@ -1,34 +1,25 @@
 import { Link, useLocation } from "react-router-dom";
-//import { useState, useEffect } from "react";
-import axios from "axios";
+import { logout } from "./Logout.js";
+import { socket } from "../utils/socket.js";
 import { useNavigate } from "react-router-dom";
-import "./style/navbar.css";
+import "../style/navbar.css";
 
 const Navbar = () => {
     const location = useLocation(); // Get the current route
     const navigate = useNavigate();
+
       
     const handleExit = () => {
         window.close(); // Close the current tab
     };
 
     const handleLogout = async () => {
-        try {
-            const user = JSON.parse(localStorage.getItem("current-user"));
-            console.log("user:", user)
-            await axios.post(
-                "http://localhost:4000/logout", 
-                { user },
-                { withCredentials: true }
-            );
-
-            console.log("Logged out successfully");
-
-            // Navigate to the home page after logout
+        try{
+            console.log("in handleLogout")
+            logout();
             navigate("/");
-
-        } catch (error) {
-            console.error("Error during logout:", error);
+        }catch(err){
+            console.log("error from logout:", err);
         }
     };
 

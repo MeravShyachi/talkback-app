@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./style/loginSignup.css";
+import "../style/loginSignup.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import authApi from "../api/authApi";
 
 
 
@@ -62,11 +62,13 @@ const Signup = () => {
     e.preventDefault(); //prevent reload of the page.
     if(handleValidation()){
       try{
-        const {data} = await axios.post("http://localhost:4000/signup",
-          { username: values.username,
-            password: values.password 
-          },{withCredentials: true});
-          console.log('Registration successful:', data.user);
+          const user = {
+            username: values.username,
+            password: values.password
+          }
+          const res = await authApi.signup(user);
+          console.log('Registration successful:', res.data.accessToken);
+          sessionStorage.setItem("authToken", res.data.accessToken);
           navigate("/home")
       }
       catch(error){

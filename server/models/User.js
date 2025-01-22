@@ -6,16 +6,16 @@ const schema = mongoose.Schema({
     username: {
         type: String,
         required: true,
-        unique : true
+        unique: true
     },
     password: {
         type: String,
         required: true,
         minlength: 6
     },
-    isConnected: {
-        type: Boolean,
-        default: false
+    refresh_token: {
+        type: String,
+        required: false
     }
 })
 
@@ -31,6 +31,7 @@ schema.pre('save', async function (next){
 schema.set("toJSON", {
     transform: (doc, ret) => {
       delete ret.password;
+      delete ret.refresh_token;
       return ret;
     }
 });
