@@ -3,21 +3,30 @@
     padding: 20px;
     display: flex;
     justify-content: center; /* Center the contactContainer horizontally */
-  }
+    align-items: center; /* Ensures it's centered vertically */
+    height: 80vh; /* Takes the full viewport height */
+}
   
   /* Contact Container */
-  .contactContainer {
-    background-color: #fff;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-    height: 700px;
-    width: 400px;
-    padding: 20px;
-    border-radius: 10px; /* Optional: Adds rounded corners */
-  }
+.contactContainer {
+  background-color: #fff;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  height: 100%; /* Take up full height inside parent */
+  max-height: 80vh; /* Prevents overflow */
+  width: 30%;
+  padding: 10px;
+  border-radius: 10px; /* Optional: Adds rounded corners */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
   
   /* Contacts Section */
   .contacts {
+    flex-grow: 1; /* Allows it to take available space */
+    overflow-y: auto; /* Enables scrolling */
     padding: 20px;
+    max-height: calc(80vh - 50px); /* Adjusted max height */
   }
   
   /* Online Contacts */
@@ -29,7 +38,7 @@
   
   .onlineContacts ul li {
     text-align: left; /* Align text to the left */
-    padding: 10px 0; /* Spacing between contacts */
+    padding: 30px 0; /* Spacing between contacts */
     border-bottom: 1px solid #ddd; /* Line under each contact */
     font-size: 20px; /* Adjust font size */
   }
@@ -44,7 +53,7 @@
   /* Offline Contacts */
   .offlineContacts ul li {
     text-align: left; /* Align text to the left */
-    padding: 10px 0; /* Spacing between contacts */
+    padding: 30px 0; /* Spacing between contacts */
     border-bottom: 1px solid #ddd; /* Line under each contact */
     font-size: 20px; /* Adjust font size */
   }

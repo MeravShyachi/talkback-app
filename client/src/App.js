@@ -1,11 +1,11 @@
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import Navbar from './components/Navbar';
-//import { useState, useEffect } from 'react';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Chat from './pages/Chat';
 import Game from './pages/Game';
+
 
 
 function App() {

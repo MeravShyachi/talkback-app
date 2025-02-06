@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../style/loginSignup.css";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toastOptions } from "../utils/toast";
 import authApi from "../api/authApi";
 
 
@@ -12,14 +12,6 @@ const Login = () => {
       username: "",
       password: ""
     });
-  
-    //toast styling:
-    const toastOptions = {
-      position: "bottom-center",
-      autoClose: 8000,
-      pauseOnHover: true,
-      draggable: true,
-    };
   
     const navigate = useNavigate();
   

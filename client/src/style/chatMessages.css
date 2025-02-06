@@ -1,0 +1,72 @@
+/* Chat messages container */
+.chat-message {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between messages */
+    overflow-y: auto;
+    max-height: calc(100% - 150px); /* Adjust based on available space */
+    margin-bottom: 20px; /* Add space for input container */
+    margin-top: 5px;
+}
+
+/* Individual message bubble */
+.message {
+    max-width: 70%;
+    padding: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: inline-block;
+    word-wrap: break-word;
+}
+
+/* Style for sent messages */
+.sended {
+    background-color: #aae2c3; /* Light green for sender */
+    align-self: flex-start; /* Align sender messages to the left */
+    margin-left: 10px; /* Space from left */
+    border-radius: 10px 10px 10px 0;
+}
+
+/* Style for received messages */
+.recieved {
+    background-color: #e1e1e1; /* Light gray for receiver */
+    align-self: flex-end; /* Align received messages to the right */
+    margin-right: 10px; /* Space from right */
+    border-radius: 10px 10px 0 10px;
+}
+
+/* Content inside the message */
+.content p {
+    margin: 0;
+    padding: 0;
+    white-space: pre-wrap; /* Handles newlines and breaks */
+}
+
+.system-message {
+    text-align: center;
+    font-style: italic;
+    color: gray;
+    background-color: #f3f3f3;
+    padding: 5px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.status {
+    font-size: 12px;
+    display: block;
+    margin-top: 2px;
+}
+
+.status.pending {
+    color: orange;
+}
+
+.status.sent {
+    color: green;
+}
+
+.status.failed {
+    color: red;
+    cursor: pointer;
+}

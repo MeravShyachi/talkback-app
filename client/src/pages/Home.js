@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import chatIcon from "../assets/images/chatIcon.jpg";
-import diceIcon from "../assets/images/diceIcon.jpg";
+import diceIcon from "../assets/images/diceIcon.png";
 import "../style/home.css";
 import userApi from "../api/userApi.js";
 import { useNavigate } from "react-router-dom";
@@ -11,31 +11,26 @@ const Home = () => {
 
     const [users, setUsers] = useState([]);
     const [connectedUsers, setConnectedUsers] = useState([])
-    const [currentUser, setCurrentUser] = useState();
+    const [currentUser, setCurrentUser] = useState(undefined);
     const navigate = useNavigate();
     const socketRef = useRef();
 
-    
+    useEffect(() => {
+        if(!sessionStorage.getItem("authToken")){
+            navigate("/");
+        }
+    },[])
 
     useEffect(() => {
         const getUsers = async() =>{
             try{
                 const response = await userApi.getAll();
-                console.log("get all res: ",response)
-                const username = response.data.username;
-                setCurrentUser(username);
-                console.log("curent user:", currentUser); 
+                console.log("Headers sent with request:", response.config.headers); // Debug headers
+                const user = response.data.currentUser;
+                console.log("user: ",user);
+                setCurrentUser(user); 
                 setUsers(response.data.users);
-                console.log("all users:", users); 
-                if(!socketRef.current){
-                    socketRef.current = socket.connect("/");
-                    socketRef.current.emit("join server", username)
-                    socketRef.current.on("online users", (onlineUsers) => {
-                        console.log("online users:", onlineUsers);
-                        setConnectedUsers(onlineUsers);
-                        console.log("online users:", connectedUsers);
-                    });   
-                }     
+
             }catch(error){
                 console.error("Token verification failed:", error);
                 navigate("/"); // Redirect to login if token is invalid
@@ -43,13 +38,40 @@ const Home = () => {
         };
 
         getUsers();
+    }, [])
 
-    }, [navigate, connectedUsers])
+    useEffect(() => {
+        if(currentUser !== undefined && !socketRef.current){
+            console.log("current user: ",currentUser)
+            socketRef.current = socket.connect("/");
+            socketRef.current.emit("join server", currentUser)
+            socketRef.current.on("connectedUsers", (userIds) => {
+                setConnectedUsers(userIds);
+            });  
+
+            // Cleanup function: disconnect when the component unmounts
+            return () => {
+                socketRef.current.disconnect();
+            }
+        }     
+    },[currentUser?._id])
+
+    useEffect(() => {  // to open the chat tab for the receiver.
+        console.log("in open chat")
+        if(!socketRef.current) return;
+        socketRef.current.on("open chat", ({ room }) => {
+            window.open(`/chat?room=${room}`, "_blank");
+        });
     
+        return () => socketRef.current.off("open chat");
+    }, [socketRef.current]);
+  
       
-    const handleChatButton = (e) => {
+    const handleChatButton = (e, userId) => {
         e.preventDefault(); //prevent reload of the page.
-        window.open("/chat", "_blank");
+        const room = `${userId} ${currentUser?._id}`;
+        socketRef.current.emit("request chat", {room, senderId: currentUser?._id, receiverId: userId})
+        window.open(`/chat?room=${room}`, "_blank");
     };
 
     const handleGameButton = (e) => {
@@ -57,19 +79,17 @@ const Home = () => {
         window.open("/game", "_blank");
     };
 
-    // Filter out the current user and organize the users
-    const filteredUsers = users.filter((user) => user.username !== currentUser);
-    const onlineUsers = filteredUsers.filter((user) =>
-        connectedUsers.includes(user.username)
+    const onlineUsers = users.filter((user) =>
+        connectedUsers.includes(user._id)
     );
-    const offlineUsers = filteredUsers.filter(
-        (user) => !connectedUsers.includes(user.username)
+    const offlineUsers = users.filter(
+        (user) => !connectedUsers.includes(user._id)
     );
 
     return ( 
         <div className="home">
             <div className="contactContainer">
-            <h2>Welcome {currentUser}!</h2>
+            <h2>Welcome {currentUser?.username}!</h2>
                 <div className="contacts">
                     {/* Render online Users */}
                     {onlineUsers.map((user) => (
@@ -79,7 +99,7 @@ const Home = () => {
                                     <span style={{ color: "#18a982" }}>{user.username}</span>
                                     <div className="contactActions">
                                         <button
-                                            onClick={handleChatButton}
+                                            onClick={(e) => handleChatButton(e, user._id)}
                                             className="actionButton"
                                         >
                                             <img

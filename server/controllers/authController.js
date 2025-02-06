@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken } from "../utils/generateToken.js";
-
+import jwt from 'jsonwebtoken';
 
 
 export const login = async (req, res) => {
@@ -75,7 +75,7 @@ export const logout = async(req, res) => {
 
         await user.save();
 
-        return res.status(200).json({ message: 'Logout successful.'});
+        return res.status(200).json({userId: user._id, message: 'Logout successful.'});
     }
     catch(error){
         console.error('Error during logout:', error);
@@ -84,28 +84,42 @@ export const logout = async(req, res) => {
 
 };
 
-export const verifyToken = (req, res) => {
-    const username = req.user.username; // `req.user` comes from the middleware
-    res.status(200).json(username);
+export const verifyToken = async(req, res) => {
+    const user = req.user; // `req.user` comes from the middleware
+    res.status(200).json(user);
 };
 
 export const refreshToken = async(req, res) => {
     try{
-        let user = await User.findOne({username: req.user.username});
+        console.log("in refresh token");
+        const user = await User.findOne({username: req.user.username});
+
+        if(!user){
+            return res.status(401).json({message: "No user found"});
+        }
 
         const refreshToken = user.refresh_token;
-        if( refreshToken === ""){
-            res.status(401).json({ message: 'no refresh token in the db' });
+        console.log("user.refreshToken: ", refreshToken);
+        
+        if( !refreshToken ||  refreshToken === ""){
+            return res.status(401).json({ message: 'No refresh token in the db' });
         };
 
-        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-            if (err) return res.sendStatus(403)
-            const accessToken = generateAccessToken(user)
-            res.json({ accessToken: accessToken })
+        console.log("env Refresh_Token_Sectret: ", process.env.REFRESH_TOKEN_SECRET)
+
+        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decodedUser) => {
+            if (err){
+                console.error("Error verifying refresh token:", err);
+                return res.status(401).json({ message: "Invalid refresh token" });
+            } 
+            console.log("after verify: ",decodedUser);
+            const accessToken = generateAccessToken(decodedUser);
+            return res.json({ accessToken });
         })
     }
     catch(error){
-        res.status(403).json({ message: 'No user found' });
+        console.error("Error in refreshToken:", error);
+        return res.status(500).json({ message: "Internal server error" });
     }
 };
 

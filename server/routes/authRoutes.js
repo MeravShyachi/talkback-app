@@ -8,7 +8,7 @@ router.post('/signup', signup);
 router.post('/login', login);
 router.post('/logout', protect, logout);
 router.get("/verify-token", protect, verifyToken);
-router.post('/refresh-token', protect ,refreshToken);
+router.post('/refresh-token', refreshToken);
 
 
 export default router; 

@@ -1,28 +1,14 @@
 import { Link, useLocation } from "react-router-dom";
-import { logout } from "./Logout.js";
-import { socket } from "../utils/socket.js";
-import { useNavigate } from "react-router-dom";
+import Logout  from "./Logout.js";
 import "../style/navbar.css";
+
 
 const Navbar = () => {
     const location = useLocation(); // Get the current route
-    const navigate = useNavigate();
-
       
     const handleExit = () => {
         window.close(); // Close the current tab
     };
-
-    const handleLogout = async () => {
-        try{
-            console.log("in handleLogout")
-            logout();
-            navigate("/");
-        }catch(err){
-            console.log("error from logout:", err);
-        }
-    };
-
     
     return (
         <nav className="navbar">
@@ -35,7 +21,7 @@ const Navbar = () => {
                     </>
                 )}
                 {location.pathname === "/home" && (      
-                    <Link to="/" onClick={handleLogout}>Logout</Link>   
+                    <Logout/>   
                 )}
                 {(location.pathname === "/chat" || location.pathname === "/game") && (
                     <button onClick={handleExit} className="exitButton">
