@@ -3,18 +3,18 @@ import { ToastContainer, toast } from "react-toastify";
 import { toastOptions } from "../utils/toast";
 import notificationSound from "../assets/sounds/notification_sound.wav";
 import { useState, useEffect, useRef } from "react";
+import {useSocket} from "../context/SocketContext.js";
 import { socket } from "../utils/socket.js";
 import authApi from "../api/authApi.js";
 import userApi from "../api/userApi.js";
 import messageApi from "../api/messageApi.js";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import ChatHeader from "../components/chat/ChatHeader.js";
 import ChatMessages from "../components/chat/CahtMessages.js";
 import ChatInput from "../components/chat/ChatInput.js";
-
+import { setSessionAuthToken, removeSessionAuthToken } from "../utils/sessionToken.js";
 const Chat = () => {
-    const socketRef = useRef(null);
-    const [socketReady, setSocketReady] = useState(false); // Track if socket is ready
+    const { socket, isConnected } = useSocket();
     const [receiver, setReceiver] = useState(undefined);
     const [sender, setSender] = useState(undefined);
     const [messages, setMessages] = useState([]);
@@ -25,32 +25,20 @@ const Chat = () => {
 
     const navigate = useNavigate();
 
-    // Initialize user and socket connection
+
+
+
+    // Initialize user
     useEffect(() => {
+
+        if (!socket || !isConnected) return; // Avoid rendering ChatHeader with undefined socket
+        
         const verifyUser = async () => {
             try {
                 const response = await authApi.protect();
+                console.log("useEffect 1, sender: ", response.data);
                 setSender(response.data);
 
-                if (!socketRef.current) {
-                    socketRef.current = socket.connect("/");
-
-                    console.log("after connect, ", socketRef.current.id);
-
-                    socketRef.current.on("connect", () => {
-                        console.log("Socket connected:", socketRef.current.id);
-                        setSocketReady(true);
-                    });
-
-                    socketRef.current.on("connect_error", (error) => {
-                        console.error("Socket connection error:", error);
-                    });
-
-                    socketRef.current.on("disconnect", () => {
-                        console.log("Socket disconnected");
-                        setSocketReady(false);
-                    });
-                }
             } catch (err) {
                 console.error("Token verification failed:", err);
                 window.close();
@@ -59,57 +47,13 @@ const Chat = () => {
 
         verifyUser();
 
-        return () => {
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-        };
-    }, []);
-
-    // Listen for messages only when socket is ready
-    useEffect(() => {
-
-        const playNotificationSound = () => {
-            if (!isMutedRef.current) {
-                const audio = new Audio(notificationSound);
-                audio.play().catch((err) => console.error("Error playing sound:", err));
-            }
-        };
-
-        if (!socketReady || !socketRef.current) return;
-
-        socketRef.current.off("receive message").on("receive message", (msg) => {
-            console.log("Received new message:", msg);
-            setArrivalMessage(msg);
-
-            playNotificationSound();
-        });
-
-        return () => {
-            socketRef.current.off("receive message");
-        };
-    }, [socketReady]);
-
-    // Handle logout across tabs
-    useEffect(() => {
-        const handleLogout = (event) => {
-            if (event.key === "logout") {
-                const logoutData = JSON.parse(event.newValue);
-                if (sender?._id === logoutData.userId) {
-                    socketRef.current?.disconnect();
-                    toast.error("You've been logged out. Please log in again.", toastOptions);
-                }
-            }
-        };
-
-        window.addEventListener("storage", handleLogout);
-        return () => window.removeEventListener("storage", handleLogout);
-    }, [sender]);
+    }, [socket, isConnected, navigate]);
 
     // Get room from URL
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
         const roomId = queryParams.get("room");
+        console.log("useEffect 2, roomId: ", roomId);
         if (roomId) setRoom(roomId);
     }, []);
 
@@ -117,6 +61,7 @@ const Chat = () => {
     useEffect(() => {
         if (!room || !sender) return;
 
+        console.log(`useEffect 3, room: ${room}, sender: ${sender}`);
         const ids = room.split(" ");
         const receiverId = ids.find((id) => id !== sender._id);
 
@@ -133,26 +78,10 @@ const Chat = () => {
         }
     }, [room, sender]);
 
-    // Join chat room when ready
-    useEffect(() => {
-        if (!room || !socketReady || !socketRef.current) return;
-
-        console.log("Joining room:", room);
-        socketRef.current.emit("join room", room);
-
-        socketRef.current.on("connect", () => {
-            console.log("Rejoining room after reconnect...");
-            socketRef.current.emit("join room", room);
-        });
-
-        return () => {
-            socketRef.current.off("connect");
-        };
-    }, [room, socketReady]);
-
     // Fetch messages
     useEffect(() => {
-        if (!receiver) return;
+        if (!receiver || !sender) return;
+        console.log(`useEffect 4, receiver: ${receiver}, sender: ${sender}`);
 
         const fetchMessages = async () => {
             try {
@@ -163,17 +92,105 @@ const Chat = () => {
             }
         };
         fetchMessages();
-    }, [receiver]);
+
+        socket.on("user has joined", ()=>{
+            const msg = {system: true, message: `${receiver.username} has join the chat`};
+            setArrivalMessage(msg);
+
+        })
+
+        socket.on("user has left", ()=> {
+            const msg = {system: true, message: `${receiver.username} has left the chat`};
+            setArrivalMessage(msg);
+        })
+
+        return () => {
+            socket.off("user has left");
+        }
+    }, [receiver, sender]);
+
+    
+    // Join chat room when ready
+    useEffect(() => {
+        console.log(`useEffect 5, join room: ${room}`);
+
+        if (!room || !isConnected) return;
+
+        console.log("Joining room:", room);
+        socket.emit("join room", room);
+
+    }, [room, isConnected]);
+
+    // Listen for messages only when socket is ready
+    useEffect(() => {
+        console.log(`useEffect 6, isConnected: ${isConnected}`);
+        if (!isConnected) return;
+
+        const playNotificationSound = () => {
+            if (!isMutedRef.current) {
+                const audio = new Audio(notificationSound);
+                audio.play().catch((err) => console.error("Error playing sound:", err));
+            }
+        };
+
+        socket.on("receive message", (msg) => {
+            console.log("Received new message:", msg);
+            setArrivalMessage(msg);
+
+            playNotificationSound();
+        });
+
+        return () => {
+            socket.off("receive message");
+        };
+    }, [socket, isConnected]);
+
+    // Handle login/logout across tabs
+    useEffect(() => {
+        console.log(`useEffect 7`);
+
+        const handleLoginLogout = (event) => {
+            if (event.key === "logout") {
+                const logoutData = JSON.parse(event.newValue);
+                console.log("logout data", logoutData)
+                if (sender?._id === logoutData.userId) {
+                    //socket.disconnect();
+                    removeSessionAuthToken();
+                    toast.error("You've been logged out. Please log in again.", toastOptions);
+                }
+            }
+            if (event.key === "login") {
+                const loginData = JSON.parse(event.newValue);
+                console.log("login data", loginData)
+                if (sender?._id === loginData.userId) {
+                    //socket.disconnect();
+                    console.log(loginData.token);
+                    setSessionAuthToken(loginData.token);
+                    toast.info("You've been logged in.", toastOptions)
+                }
+            }
+        };
+
+        window.addEventListener("storage", handleLoginLogout);
+        return () => window.removeEventListener("storage", handleLoginLogout);
+    }, [sender]);
+
+
 
     // Add new messages
     useEffect(() => {
+        console.log(`useEffect 8, arrivalMessage ${arrivalMessage}`);
+
         if (arrivalMessage) {
             setMessages((prev) => [...prev, arrivalMessage]);
         }
     }, [arrivalMessage]);
 
     const handleSendMessage = (msg) => {
-        if (!socketRef.current) return;
+        if (!isConnected) {
+            toast.error("You've been logged out. Please log in again.", toastOptions);
+            return;
+        };
 
         const tempId = Date.now();
         setMessages((prev) => [
@@ -181,9 +198,9 @@ const Chat = () => {
             { id: tempId, fromSelf: true, message: msg, status: "pending" },
         ]);
 
-        socketRef.current.emit(
+        socket.emit(
             "send message",
-            { room, msg, receiver: receiver.username },
+            { room, msg, receiver: receiver?.username },
             async (response) => {
                 if (response.status === "success") {
                     try {
@@ -219,9 +236,7 @@ const Chat = () => {
     return (
         <div className="chat">
             <div className="chatContainer">
-                {socketReady && (
-                    <ChatHeader receiver={receiver} isMuted={isMuted} toggleMute={toggleMute} socketRef={socketRef} room={room} sender={sender} />
-                )}
+                <ChatHeader receiver={receiver} isMuted={isMuted} toggleMute={toggleMute} socket={socket} room={room} sender={sender} />
                 <ChatMessages messages={messages} />
                 <ChatInput handleSendMessage={handleSendMessage} />
                 <ToastContainer />

@@ -1,13 +1,18 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Logout  from "./Logout.js";
 import "../style/navbar.css";
 
 
 const Navbar = () => {
     const location = useLocation(); // Get the current route
-      
+    const navigate = useNavigate();
+
+    const handleBack = () => {
+        navigate(-1); // Go to the previous page
+    };
+
     const handleExit = () => {
-        window.close(); // Close the current tab
+        window.close(); //close the page
     };
     
     return (
@@ -23,9 +28,14 @@ const Navbar = () => {
                 {location.pathname === "/home" && (      
                     <Logout/>   
                 )}
-                {(location.pathname === "/chat" || location.pathname === "/game") && (
+                {(location.pathname === "/chat") && (
                     <button onClick={handleExit} className="exitButton">
                         Exit
+                    </button>
+                )}
+                {(location.pathname === "/game") && (
+                    <button onClick={handleBack} className="backButton">
+                        Back
                     </button>
                 )}    
             </div>    

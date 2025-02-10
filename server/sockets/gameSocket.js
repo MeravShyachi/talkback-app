@@ -2,7 +2,7 @@ const gameSocket =(io, socket) => {
 
     socket.on("send game request", ({room, sender}) => {
         console.log(`${sender.username} is requesting a game`);
-        socket.to(room).emit("receive game request", {gameRequest: `${sender} wants to play a game with you.`});
+        socket.to(room).emit("receive game request", {gameRequest: `${sender.username} wants to play a game with you.`});
 
     });
 

@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import authApi from "../api/authApi";
 import { socket } from "../utils/socket.js";
+import { removeSessionAuthToken } from "../utils/sessionToken";
+
 
 const Logout = () => {
 
@@ -8,7 +10,7 @@ const Logout = () => {
         try {
             const response = await authApi.logout();
             const userId = response.data.userId;
-            sessionStorage.removeItem("authToken");
+            removeSessionAuthToken();
             localStorage.setItem("logout", JSON.stringify({ userId: userId, timestamp: Date.now() })); // Triggers event for other tabs
             socket.disconnect();
             console.log("Logged out successfully");    

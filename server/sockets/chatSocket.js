@@ -1,12 +1,10 @@
 const chatSocket = (io, socket) => {
     socket.on("join room", (room) => {
-        console.log("join room: ", room)
         socket.join(room);
         socket.to(room).emit("user has joined");
     });
 
     socket.on("send message", ({room, msg, receiver}, callback) => {
-        console.log("in send massage, to: ", room);
         const roomSockets = io.sockets.adapter.rooms.get(room); // Get all sockets in the room
 
         // Check if room exists and has more than one user (excluding sender)
@@ -22,11 +20,10 @@ const chatSocket = (io, socket) => {
     });
 
     socket.on("disconnecting", () => {
-        console.log("in disconnecting");
         for (const room of socket.rooms) {
           if (room !== socket.id) {
             console.log("in if")
-            socket.to(room).emit("user has left", socket.id);
+            socket.to(room).emit("user has left");
           }
         }
     });

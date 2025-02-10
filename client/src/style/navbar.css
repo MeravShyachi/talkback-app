@@ -47,7 +47,17 @@
     cursor: pointer;
     margin-left: 16px;
     font-size: 14px;
-}
+  }
+  .backButton {
+    background-color: #18a982;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 16px;
+    font-size: 14px;
+  }
 
 .exitButton:hover {
     background-color: #d72554;

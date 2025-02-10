@@ -1,0 +1,74 @@
+
+
+.action-button{
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex; /* Ensure alignment is consistent */
+    align-items: center; /* Vertically center the icon */
+    gap: 10px; /* Add some spacing between buttons if needed */
+}
+
+.action-button:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.game-button{
+    width: 40px; 
+    height: 40px;
+}
+
+.tooltip {
+    visibility: hidden; /* Hidden by default */
+    opacity: 0; /* Fully transparent */
+    position: absolute;
+    bottom: 110%; /* Position tooltip above the button */
+    left: 50%; /* Center align the tooltip */
+    transform: translateX(-50%);
+    background-color: #333; /* Dark background */
+    color: #fff; /* White text */
+    padding: 5px 10px; /* Tooltip padding */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 12px; /* Small text */
+    white-space: nowrap; /* Prevent line break */
+    transition: opacity 0.3s ease-in-out; /* Smooth fade-in effect */
+    z-index: 10; /* Ensure tooltip is above other elements */
+}
+
+.waiting-popup, .game-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    font-weight: normal;
+    font-size: 15px;
+    z-index: 1000;
+}
+
+.waiting-popup button {
+    background-color: #dc3545;
+    color: white;
+    margin: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.game-popup button {
+    margin: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+

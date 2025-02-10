@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import chatIcon from "../assets/images/chatIcon.jpg";
 import diceIcon from "../assets/images/diceIcon.png";
 import "../style/home.css";
 import userApi from "../api/userApi.js";
 import { useNavigate } from "react-router-dom";
-import { socket } from "../utils/socket.js";
+import {useSocket} from "../context/SocketContext.js";
+import GameButton from "../components/game/GameButton.js";
 
 
 const Home = () => {
@@ -13,7 +14,22 @@ const Home = () => {
     const [connectedUsers, setConnectedUsers] = useState([])
     const [currentUser, setCurrentUser] = useState(undefined);
     const navigate = useNavigate();
-    const socketRef = useRef();
+    const { socket, isConnected } = useSocket();
+    
+    const getUsers = async() =>{
+        try{
+            const response = await userApi.getAll();
+            console.log("Headers sent with request:", response.config.headers); // Debug headers
+            const user = response.data.currentUser;
+            console.log("user: ",user);
+            setCurrentUser(user); 
+            setUsers(response.data.users);
+
+        }catch(error){
+            console.error("Token verification failed:", error);
+            navigate("/"); // Redirect to login if token is invalid
+        }
+    };
 
     useEffect(() => {
         if(!sessionStorage.getItem("authToken")){
@@ -22,66 +38,59 @@ const Home = () => {
     },[])
 
     useEffect(() => {
-        const getUsers = async() =>{
-            try{
-                const response = await userApi.getAll();
-                console.log("Headers sent with request:", response.config.headers); // Debug headers
-                const user = response.data.currentUser;
-                console.log("user: ",user);
-                setCurrentUser(user); 
-                setUsers(response.data.users);
-
-            }catch(error){
-                console.error("Token verification failed:", error);
-                navigate("/"); // Redirect to login if token is invalid
+        const handleSignup = (event) => {
+            if(event.key === "signup") {
+                getUsers();
+                return true;
             }
-        };
+        }
 
         getUsers();
+
+        window.addEventListener("storage", handleSignup);
+        return () => window.removeEventListener("storage", handleSignup);
+
     }, [])
 
     useEffect(() => {
-        if(currentUser !== undefined && !socketRef.current){
-            console.log("current user: ",currentUser)
-            socketRef.current = socket.connect("/");
-            socketRef.current.emit("join server", currentUser)
-            socketRef.current.on("connectedUsers", (userIds) => {
-                setConnectedUsers(userIds);
-            });  
+        console.log(isConnected)
+        if(!isConnected || currentUser === undefined) return;
 
-            // Cleanup function: disconnect when the component unmounts
-            return () => {
-                socketRef.current.disconnect();
-            }
-        }     
-    },[currentUser?._id])
+        console.log("current user: ",currentUser);
 
-    useEffect(() => {  // to open the chat tab for the receiver.
-        console.log("in open chat")
-        if(!socketRef.current) return;
-        socketRef.current.on("open chat", ({ room }) => {
+        socket.emit("join server", currentUser)
+
+        socket.on("connected users", (userIds) => {
+            console.log("userIds: ", userIds)
+            setConnectedUsers(userIds);
+        });
+  
+        socket.on("open chat", ({ room }) => {
             window.open(`/chat?room=${room}`, "_blank");
         });
+
+        // Cleanup function
+        return () => {
+            socket.off("connected users");
+            socket.off("open chat");
+        }
+          
+    },[currentUser, socket, isConnected])
+
     
-        return () => socketRef.current.off("open chat");
-    }, [socketRef.current]);
-  
+
       
     const handleChatButton = (e, userId) => {
         e.preventDefault(); //prevent reload of the page.
         const room = `${userId} ${currentUser?._id}`;
-        socketRef.current.emit("request chat", {room, senderId: currentUser?._id, receiverId: userId})
+        socket.emit("request chat", {room, receiverId: userId})
         window.open(`/chat?room=${room}`, "_blank");
-    };
-
-    const handleGameButton = (e) => {
-        e.preventDefault(); //prevent reload of the page.
-        window.open("/game", "_blank");
     };
 
     const onlineUsers = users.filter((user) =>
         connectedUsers.includes(user._id)
     );
+    
     const offlineUsers = users.filter(
         (user) => !connectedUsers.includes(user._id)
     );
@@ -108,16 +117,7 @@ const Home = () => {
                                                 className="actionImage"
                                             />
                                         </button>
-                                        <button
-                                            onClick={handleGameButton}
-                                            className="actionButton"
-                                        >
-                                            <img
-                                                src={diceIcon} // Path to your image
-                                                alt="game"
-                                                className="actionImage"
-                                            />
-                                        </button>
+                                        <GameButton receiver={user} socket={socket} room={user} sender={currentUser}/>
                                     </div>
                                 </li>
                             </ul>

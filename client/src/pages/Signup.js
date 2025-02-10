@@ -4,6 +4,8 @@ import "../style/loginSignup.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import authApi from "../api/authApi";
+import { setSessionAuthToken } from "../utils/sessionToken";
+
 
 
 
@@ -68,8 +70,10 @@ const Signup = () => {
           }
           const res = await authApi.signup(user);
           console.log('Registration successful:', res.data.accessToken);
-          sessionStorage.setItem("authToken", res.data.accessToken);
-          navigate("/home")
+          setSessionAuthToken(res.data.accessToken);
+          console.log("after setSession");
+          localStorage.setItem("signup", JSON.stringify({ timestamp: Date.now() }));
+          navigate("/home", { replace: true })
       }
       catch(error){
         if (error.response && error.response.data) {

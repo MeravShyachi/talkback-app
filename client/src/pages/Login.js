@@ -4,6 +4,7 @@ import "../style/loginSignup.css";
 import { ToastContainer, toast } from "react-toastify";
 import { toastOptions } from "../utils/toast";
 import authApi from "../api/authApi";
+import { setSessionAuthToken } from "../utils/sessionToken";
 
 
 const Login = () => {
@@ -48,9 +49,10 @@ const Login = () => {
               password: values.password
             }
             const res = await authApi.login(user);
-            console.log('login successful:', res.data.accessToken);
-            sessionStorage.setItem("authToken", res.data.accessToken);
-            navigate("/home")
+            console.log('login successful:', res.data);
+            setSessionAuthToken(res.data.accessToken);
+            localStorage.setItem("login", JSON.stringify({ userId: res.data.user._id, token: res.data.accessToken, timestamp: Date.now() })); // Triggers event for other tabs
+            navigate("/home", { replace: true })
           }
           catch(error){
             if (error.response && error.response.data) {
