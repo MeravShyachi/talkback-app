@@ -7,8 +7,9 @@ const Navbar = () => {
     const location = useLocation(); // Get the current route
     const navigate = useNavigate();
 
-    const handleBack = () => {
-        navigate(-1); // Go to the previous page
+    const handleHome = () => {
+        window.dispatchEvent(new Event("leaveGame"));
+        navigate("/home"); 
     };
 
     const handleExit = () => {
@@ -34,8 +35,8 @@ const Navbar = () => {
                     </button>
                 )}
                 {(location.pathname === "/game") && (
-                    <button onClick={handleBack} className="backButton">
-                        Back
+                    <button onClick={handleHome} className="homeButton">
+                        Home
                     </button>
                 )}    
             </div>    

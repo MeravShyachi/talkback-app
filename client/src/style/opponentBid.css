@@ -1,0 +1,22 @@
+.opponent-bid-container {
+    display: flex;
+    align-items: center;  /* Align items vertically */
+    justify-content: center; /* Keep it centered */
+    text-align: center;
+    margin-top: 20px;
+}
+
+.opponent-bid-container .opponent{
+    font-size: 25px;
+    font-weight: bold;
+    color:rgb(151, 2, 22);
+    margin-right: 30px;
+}
+
+.opponent-bid-container .bid{
+    font-size: 28px;
+    font-weight: bold;
+    color:black;
+    margin-right: 4vw;
+}
+

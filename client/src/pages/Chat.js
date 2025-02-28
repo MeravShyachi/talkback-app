@@ -4,79 +4,20 @@ import { toastOptions } from "../utils/toast";
 import notificationSound from "../assets/sounds/notification_sound.wav";
 import { useState, useEffect, useRef } from "react";
 import {useSocket} from "../context/SocketContext.js";
-import { socket } from "../utils/socket.js";
-import authApi from "../api/authApi.js";
-import userApi from "../api/userApi.js";
+import { useAuth } from "../context/AuthContext.js";
 import messageApi from "../api/messageApi.js";
-import { Navigate, useNavigate } from "react-router-dom";
 import ChatHeader from "../components/chat/ChatHeader.js";
 import ChatMessages from "../components/chat/CahtMessages.js";
 import ChatInput from "../components/chat/ChatInput.js";
 import { setSessionAuthToken, removeSessionAuthToken } from "../utils/sessionToken.js";
+
 const Chat = () => {
     const { socket, isConnected } = useSocket();
-    const [receiver, setReceiver] = useState(undefined);
-    const [sender, setSender] = useState(undefined);
+    const {currentUser: sender, otherUser: receiver, room} = useAuth();
     const [messages, setMessages] = useState([]);
     const [arrivalMessage, setArrivalMessage] = useState(null);
-    const [room, setRoom] = useState("");
     const [isMuted, setIsMuted] = useState(false);
     const isMutedRef = useRef(isMuted);
-
-    const navigate = useNavigate();
-
-
-
-
-    // Initialize user
-    useEffect(() => {
-
-        if (!socket || !isConnected) return; // Avoid rendering ChatHeader with undefined socket
-        
-        const verifyUser = async () => {
-            try {
-                const response = await authApi.protect();
-                console.log("useEffect 1, sender: ", response.data);
-                setSender(response.data);
-
-            } catch (err) {
-                console.error("Token verification failed:", err);
-                window.close();
-            }
-        };
-
-        verifyUser();
-
-    }, [socket, isConnected, navigate]);
-
-    // Get room from URL
-    useEffect(() => {
-        const queryParams = new URLSearchParams(window.location.search);
-        const roomId = queryParams.get("room");
-        console.log("useEffect 2, roomId: ", roomId);
-        if (roomId) setRoom(roomId);
-    }, []);
-
-    // Fetch receiver details
-    useEffect(() => {
-        if (!room || !sender) return;
-
-        console.log(`useEffect 3, room: ${room}, sender: ${sender}`);
-        const ids = room.split(" ");
-        const receiverId = ids.find((id) => id !== sender._id);
-
-        if (receiverId) {
-            const fetchReceiver = async () => {
-                try {
-                    const response = await userApi.getUser(receiverId);
-                    setReceiver(response.data);
-                } catch (err) {
-                    console.error("Couldn't get receiver details", err);
-                }
-            };
-            fetchReceiver();
-        }
-    }, [room, sender]);
 
     // Fetch messages
     useEffect(() => {
@@ -174,8 +115,6 @@ const Chat = () => {
         window.addEventListener("storage", handleLoginLogout);
         return () => window.removeEventListener("storage", handleLoginLogout);
     }, [sender]);
-
-
 
     // Add new messages
     useEffect(() => {

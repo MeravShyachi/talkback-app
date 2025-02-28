@@ -1,7 +1,511 @@
+import "../style/game.css";
+import { ToastContainer, toast } from "react-toastify";
+import { gameToasts, errorGameToasts } from "../utils/toast";
+import DiceBoard from "../components/game/DiceBoard";
+import ButtonSelector from "../components/game/ButtonSelector";
+import OpponentBid from "../components/game/OpponentBid.js";
+import React, { useEffect, useReducer, useState } from "react";
+import { useAuth } from "../context/AuthContext.js";
+import {useSocket} from "../context/SocketContext.js";
+import { useNavigate } from "react-router-dom";
+import {getGameState, createGame, updateGameState, deleteGame} from "../api/gameApi.js";
+import GameRulesButton from "../components/game/GameRulesButton.js";
+
+
 const Game = () => {
+    const {currentUser, otherUser: opponent, room} = useAuth();
+    const {socket, isConnected} = useSocket();
+    const [numDice, setNumDice] = useState(5); // Start with 6 dice
+    const [opponentNumDice, setOpponentNumDice] = useState(5);
+    const [yourTurn, setYourTurn] = useState(true);
+    const [opponentTimes, setOpponentTimes] = useState(null);
+    const [opponentNumber, setOpponentNumber] = useState(null);
+    const [diceArray, setDiceArray] = useState(Array(numDice).fill(1)); // Default dice state
+    const [rolling, setRolling] = useState(false);
+    const [opponentRollDice, setOpponentRollDice] = useState(false);
+    const [gameStarted, setGameStarted] = useState(null); // Track if game has started
+    const [showGameOverPopup, setShowGameOverPopup] = useState(null);
+    const [isWaiting, setIsWaiting] = useState(null);
+    const [turnTimer, setTurnTimer] = useState(40);
+
+    const navigate = useNavigate(); 
+    
+    // Handle leaving the game page
+    useEffect(() => {
+        const handleLeaveGame = async() => {
+            console.log("in leave game")
+            if (socket && room) {
+                await deleteGame(room, currentUser._id);
+                socket.emit("leave room", {room, username: currentUser.username});
+                socket.emit("leave game", {room});
+            }
+        };
+    
+        window.addEventListener("leaveGame", handleLeaveGame);
+    
+        return () => {
+            window.removeEventListener("leaveGame", handleLeaveGame);
+        };
+    }, [socket, room, currentUser]);
+
+    // Set starter or fetch game data from DB when first render 
+    useEffect(() => {
+        const starter = room.split(" ")[0];
+        const fetchGameState = async() => {
+            const response = await getGameState(room, currentUser._id);
+            if (response?.error) {
+                // Show user a toast if an error occurs
+                toast.error(response.error, errorGameToasts);
+                return; // Stop execution
+            }
+
+            if(response?.notExists){
+                // setNumDice(5);
+                if(currentUser._id !== starter){
+                    setYourTurn(false);
+                    toast.info(`${opponent.username} will start`, gameToasts);
+                } else {
+                    toast.info(`You'r turn`, gameToasts);
+                }
+                return;
+            }
+
+            setNumDice(response.numDice);
+            setOpponentNumDice(response.opponentNumDice);
+            setYourTurn(response.yourTurn);
+            setOpponentTimes(response.opponentTimes);
+            setOpponentNumber(response.opponentNumber);
+            setDiceArray(response.diceArray);
+            setGameStarted(response.gameStarted);
+            setTurnTimer(response.turnTimer);
+            setShowGameOverPopup(response.showGameOverPopup);
+            setIsWaiting(response.isWaiting);
+        }
+
+        fetchGameState();
+    },[])
+
+    // Manage timer for turn
+    useEffect(() => {
+        let timer;
+        let exitTimeout;
+
+        const saveTimerToDB = async (newTime) => {
+            const updatedData = { player: currentUser._id ,turnTimer: newTime };
+            await updateGameState(room, updatedData); // 🔥 Save timer to DB
+           
+        };
+        
+        if (yourTurn && gameStarted && !showGameOverPopup) {
+            timer = setInterval(() => {
+                setTurnTimer(prev => {
+                    if (prev <= 1) {
+                        clearInterval(timer); // Stop the timer
+                        socket.emit("turn timeout", { room, userId: currentUser._id });
+                        setShowGameOverPopup("Time's up! You lost.");
+                        setYourTurn(false);
+                        return 0; // Set timer to 0
+                    }
+                    saveTimerToDB(prev - 1);
+                    return prev - 1;
+                });
+            }, 1000); // Update every second
+        }
+
+        if (showGameOverPopup || !gameStarted) {
+            // Wait 30 seconds for a response
+            exitTimeout = setTimeout(() => {
+                setShowGameOverPopup(false);
+                setIsWaiting("No response... Leaving the game.");
+                socket.emit("leave room", {room, username: currentUser.username});
+                socket.emit("leave game", {room});
+                setTimeout(() => navigate('/home'), 3000); // Redirect after 3s
+            }, 30000); // 30s timeout
+        }
+    
+        return () => {
+            clearInterval(timer); // Cleanup timer
+            clearTimeout(exitTimeout); // Cleanup if popup closes
+        }
+    }, [yourTurn, gameStarted, showGameOverPopup, turnTimer]);
+
+    // Reset opponent's times and number when game start again
+    useEffect(() => {
+
+        const updateGameStartedToDB = async() => {
+            console.log("game started: ", gameStarted);
+
+            const response = await updateGameState(room, {
+                player: currentUser._id,
+                gameStarted: false,
+                opponentNumber: null,
+                opponentTimes: null
+            })
+
+            if(response){
+                setOpponentNumber(null);
+                setOpponentTimes(null);
+            }
+        }
+
+        if(gameStarted === false){
+            updateGameStartedToDB();
+        }
+
+
+    },[gameStarted])
+
+    // Let the user know when its his turn
+    useEffect(() => {
+        const updateYourTurnToDB = async() => {
+            const response = await updateGameState(room, {player: currentUser._id, yourTurn});
+            return response;
+        }
+
+        if(gameStarted !== null){
+            const res = updateYourTurnToDB();
+            if(res && yourTurn){
+                toast.info(`You'r turn`, gameToasts);
+            }
+        }
+    },[yourTurn])
+
+    useEffect(() => {
+        const updateNumDiceToDB = async() => {
+            const newArray = Array(numDice).fill(1);
+            const response = await updateGameState(room, { player: currentUser._id, numDice})
+            if(!gameStarted){
+                console.log("numDice changed, updating in DB:", numDice);
+                setDiceArray(newArray);
+                const res = await updateGameState(room, {player: currentUser._id, diceArray: newArray});
+                if(res){
+                    console.log("diceArray changed, updating in DB:", newArray);
+                }
+            }
+        }
+
+        if(0 < numDice && numDice < 5){
+            updateNumDiceToDB();
+            socket.emit("opponent number of dice", { room, opponentNumDice: numDice });
+        }
+
+    },[numDice]);
+
+    useEffect(() => {
+        const updatePopupDataToDB = async(updatedData) => {
+            const response = await updateGameState(room, updatedData)
+
+            if(response){
+                console.log("data saved successfull.");
+            }
+        }
+        
+        if(isWaiting){
+            updatePopupDataToDB({player: currentUser._id, isWaiting});
+        }
+
+        if(showGameOverPopup !== null){
+            updatePopupDataToDB({player: currentUser._id, showGameOverPopup});
+        }
+
+    },[isWaiting, showGameOverPopup]);
+
+    useEffect(()=>{
+        if (!socket || !isConnected) return; 
+
+        socket.emit("join game", ({roomId: room, sender: currentUser}));
+
+        socket.on("roll dice", ()=> {
+            console.log("Opponent rolled dice!");
+
+            setOpponentRollDice(true);
+
+            setTimeout(() => {
+                setOpponentRollDice(false);
+            }, 1000)
+        })
+
+        socket.on("turn timeout", ({ loserId }) => {
+            if (loserId !== currentUser._id) {
+                setYourTurn(true);
+                setShowGameOverPopup(`${opponent.username} didn't play for 40 seconds. You win!`);
+            }
+        });
+
+        socket.on("opponent left", async({msg}) => {
+            await deleteGame(room, currentUser._id);
+            setShowGameOverPopup(false);
+            setIsWaiting(msg);
+            socket.emit("leave room", {room, username: currentUser.username});
+            setTimeout(() => navigate('/home'), 3000); // Exit after 3s
+        });
+
+        socket.on("opponent choice", async ({selectedTimes, selectedNumber}) => {
+            const response = await updateGameState(room, {
+                player: currentUser._id, 
+                opponentTimes: selectedTimes, 
+                opponentNumber: selectedNumber 
+            });
+            if(response){
+                setOpponentNumber(selectedNumber);
+                setOpponentTimes(selectedTimes);
+            }
+        })
+
+        socket.on("turn ended", ()=>{
+            setYourTurn(prevTurn => !prevTurn);
+        })
+
+        socket.on("you lost", () => {
+            handleLost()
+        });
+
+        socket.on("you won", async() => {
+            setYourTurn(false);
+            const response = await updateGameState(room, {player: currentUser._id, gameStarted: false});
+            if(response){
+                setGameStarted(false);
+            }
+        });
+
+        socket.on("game over", () => {
+            setShowGameOverPopup("You are the winner!!");
+            setYourTurn(true);
+        });
+
+        socket.on("start new game", async() => {
+            const response = await updateGameState(room, {
+                player: currentUser._id,
+                numDice: 5,
+                opponentNumDice: 5,
+                diceArray: Array(5).fill(1),
+                isWaiting: null,
+                showGameOverPopup: null
+            })
+            console.log("in start new game, response: ", response);
+            if(response){
+                resetGame(); // Restart game if both players agree
+            }
+        });
+
+        socket.on("player reconnected", () => {
+            console.log(`Player ${opponent.username} rejoined the game!`);
+            toast.info("Your opponent reconnected!", gameToasts);
+        });
+
+        return () => {
+            socket.off("roll dice");
+            socket.off("turn timeout");
+            socket.off("opponent left");
+            socket.off("opponent choice");
+            socket.off("turn ended");
+            socket.off("you lost");
+            socket.off("you won");
+            socket.off("game over");
+            socket.off("quit game");
+            socket.off("start new game");
+            socket.off("player reconnected");
+        }
+
+    },[isConnected])
+
+    // Handle Liar events
+    useEffect(() => {
+
+        // Function to count total occurrences of the target numbers
+        const countTotalOccurrences = (arr, numbers) => {
+            return arr.filter(value => numbers.includes(value)).length;
+        };
+
+        socket.on("liar", ({opponentDiceArray, times, num}) => { 
+
+            const targetNumbers = [1, num]; 
+
+            // Count occurrences in both arrays and sum them up
+            const totalCount = countTotalOccurrences(opponentDiceArray, targetNumbers) + 
+            countTotalOccurrences(diceArray, targetNumbers);
+
+            if(times > totalCount){
+                handleLost();
+                toast.error(`You lost`, gameToasts);
+            } else {
+                socket.emit("set winner", {room, won: false});
+                setYourTurn(false);
+                setGameStarted(false);
+            }
+        
+        })
+
+        socket.on("exact", ({opponentDiceArray, times, num}) => { 
+
+            const targetNumbers = [1, num]; 
+
+            // Count occurrences in both arrays and sum them up
+            const totalCount = countTotalOccurrences(opponentDiceArray, targetNumbers) + 
+            countTotalOccurrences(diceArray, targetNumbers);
+            console.log("totalCount: ", totalCount);
+            console.log("times: ", times);
+            
+            if(times === totalCount){
+                handleLost();
+                toast.error(`You lost`, gameToasts);
+            } else {
+                socket.emit("set winner", {room, won: false});
+                setYourTurn(false);
+                setGameStarted(false);
+            }
+        
+        })
+
+        socket.on("opponent number of dice", async({num}) => {
+            const response = await updateGameState(room, {
+                player: currentUser._id, 
+                opponentNumDice: num 
+            });
+            if(response){
+                setOpponentNumDice(num);
+            }
+        })
+
+        return () => {
+            socket.off("liar");
+            socket.off("exact");
+            socket.off("opponent number of dice");
+        }
+    },[diceArray, opponentNumber, opponentTimes])
+
+
+    const handleLost = async() => {
+        console.log("in handleLost, numDice: ", numDice);
+
+        setNumDice(prev => {
+            if(prev > 1){
+                setGameStarted(false);
+                setYourTurn(true);
+                socket.emit("set winner", { room, won: true });
+                return prev-1;
+            } else {
+                console.log("in else for game over");
+                setYourTurn(false);
+                setShowGameOverPopup("You lost this time..");
+                socket.emit("game over", { room });
+            }
+
+        })
+    }
+
+    const rollDice = async() => {
+        if (!socket || !isConnected) {
+            console.error("Socket is not connected! Cannot roll dice.");
+            return;
+        }
+        if (rolling) return; // Prevent spamming the roll button
+
+        const newDiceArray = diceArray.map(() => Math.floor(Math.random() * 6) + 1);
+
+        // Call API to create a game entry in the database
+        const response = await createGame(room, currentUser._id, yourTurn, newDiceArray);
+
+        if (response?.error) {
+            // Show user a toast if an error occurs
+            toast.error(response.error, errorGameToasts);
+            setRolling(false);
+            return; // Stop execution
+        }
+
+        if (response?.alreadyExists) {
+            console.log("Game already exists, continuing...");
+        }
+
+        // Update UI after a successful game creation
+        socket.emit("roll dice", {room});
+        setRolling(true);
+        setTimeout(() => {
+            setDiceArray(newDiceArray);
+            setRolling(false);
+            setGameStarted(true);
+        }, 1000); 
+
+    };
+
+    const handlePlayAgain = async(response) => {
+        if(response === "no"){
+            await deleteGame(room, currentUser._id);
+            socket.emit("quit game", {room, username: opponent.username})
+            socket.emit("leave room", {room, username: currentUser.username});
+            navigate('/home')
+        } else {
+            setIsWaiting(`Waiting for ${opponent.username} to answer...`);
+            setShowGameOverPopup(false);
+            socket.emit("play again", {room, userId: currentUser._id})
+        }
+    }
+
+    const resetGame = () => {
+        setNumDice(5);
+        setOpponentNumDice(5)
+        setOpponentTimes(null);
+        setOpponentNumber(null);
+        setDiceArray(Array(5).fill(1));
+        setGameStarted(false);
+        setShowGameOverPopup(false);
+        setIsWaiting(null);
+    };
+    
     return ( 
-        <div className="game">
-            <h1>game page</h1>
+        <div>
+            <GameRulesButton />
+            {showGameOverPopup && showGameOverPopup !== "false" && (
+                <div className="game-over-popup">
+                    <h3>{showGameOverPopup}</h3>
+                    <p>Do you want to play again?</p>
+                    <button onClick={() => handlePlayAgain("yes")}>Yes</button>
+                    <button onClick={() => handlePlayAgain("no")}>No</button>
+                </div>
+            )}
+            {isWaiting && (
+                <div className="game-over-popup">
+                    <p>{isWaiting}</p>
+                </div>
+            )}
+            {!gameStarted && !isWaiting && !showGameOverPopup &&(
+                <div className="start-game-popup">
+                    <p>Press Start to roll the dice</p>
+                    <button onClick={rollDice} disabled={rolling}>
+                        {rolling ? "Rolling..." : "Start"}
+                    </button>
+                </div>
+            )}
+            {opponentTimes && 
+                <OpponentBid 
+                socket={socket} 
+                room={room}
+                opponent={opponent}                 
+                opponentTimes={opponentTimes} 
+                opponentNumber={opponentNumber}
+            />
+            }
+            <DiceBoard 
+                diceArray={diceArray} 
+                rolling={rolling} 
+                opponentNumDice={opponentNumDice} 
+                opponentRollDice={opponentRollDice} 
+            />
+            <ButtonSelector 
+                socket={socket} 
+                room={room} 
+                yourTurn={yourTurn} 
+                opponentTimes={opponentTimes} 
+                opponentNumber={opponentNumber}
+                diceArray={diceArray}
+                setTurnTimer={setTurnTimer}
+            />
+            {yourTurn && gameStarted && (
+                <div className="timer">
+                    <p>Time left: {turnTimer}s</p>
+                </div>
+            )}    
+            <ToastContainer />        
         </div>
      );
 }

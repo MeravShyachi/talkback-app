@@ -1,55 +1,49 @@
+
 .navbar {
-    padding: 20px;
+    padding: 10px;
     display: flex;
     max-width: 1000px;
     margin: 0 auto;
-    border-bottom: 1px solid #f2f2f2;
+    border-bottom: 1px solid #b9a28a;
+    align-items: center;
   }
   .navbar h1 {
-    color: #18a982;
+    color: #704807;
   }
   .navbar .links {
     margin-left: auto;
   }
   .navbar a {
+    color:#407541;
     margin-left: 16px;
     text-decoration: none;
     padding: 6px;
+    font-weight: bold;
   }
   .navbar a:hover {
-    color: #18a982;
+    color: #a59176;
   }
   .navbar .selectedLink{
     margin-left: 16px; /* Ensure consistent spacing with other links */
     padding: 8px 12px; /* Slightly larger padding for active links */
     border-radius: 5px;
-    background-color: #ade7d6; /* Background color for active link */
-    color: #333; /* Ensure text remains readable */
+    background-color: #4f6c4e; /* Background color for active link */
+    color: #d2c9bc; /* Ensure text remains readable */
     font-weight: bold; /* Optional: Highlight the active link */
   }
   .navbar .selectedLink:hover {
-    background-color: #96d9c3; /* Slightly darker shade for hover */
-    color: #333;
+    background-color: #5f6c5f; /* Slightly darker shade for hover */
+    color: #d2c9bc;
   }
   .navbar .welcome {
     flex: 1; /* Take up available space between the title and links */
     text-align: center; /* Center the text within this space */
     font-size: 18px;
-    color: #333; /* Optional: Adjust color if needed */
+    color: #704807; /* Optional: Adjust color if needed */
   }
  
   .exitButton {
-    background-color: #f1356d;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 16px;
-    font-size: 14px;
-  }
-  .backButton {
-    background-color: #18a982;
+    background-color: #d4605c;
     color: white;
     border: none;
     padding: 8px 12px;
@@ -59,6 +53,25 @@
     font-size: 14px;
   }
 
-.exitButton:hover {
+  .exitButton:hover {
     background-color: #d72554;
-}
+  }
+
+  .homeButton {
+    background-color: #4f6c4e;
+    color: #d2c9bc;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 16px;
+    font-size: 14px;
+  }
+  .homeButton:hover{
+    background-color: #b4ccb4; /* Slightly darker shade for hover */
+    color: #81786b;
+  }
+
+  
+
+

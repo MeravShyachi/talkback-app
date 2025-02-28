@@ -9,7 +9,7 @@
 
 /* Chat Container */
 .chatContainer {
-    background-color: #fff;
+    background-color: rgb(252, 252, 245);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
     height: 100%; /* Take up full height inside parent */
     max-height: 80vh; /* Prevents overflow */

@@ -6,7 +6,7 @@
     overflow-y: auto;
     max-height: calc(100% - 150px); /* Adjust based on available space */
     margin-bottom: 20px; /* Add space for input container */
-    margin-top: 5px;
+    margin-top: 15px;
 }
 
 /* Individual message bubble */
@@ -35,8 +35,13 @@
     border-radius: 10px 10px 0 10px;
 }
 
+.content {
+    background-color: transparent !important;
+}
+
 /* Content inside the message */
 .content p {
+    background-color: transparent !important;
     margin: 0;
     padding: 0;
     white-space: pre-wrap; /* Handles newlines and breaks */
@@ -53,6 +58,7 @@
 }
 
 .status {
+    background-color: transparent !important;
     font-size: 12px;
     display: block;
     margin-top: 2px;

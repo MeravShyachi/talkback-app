@@ -19,7 +19,7 @@ export const SocketProvider = ({ children, isAuthenticated }) => {
                 socketRef.current.connect();
 
                 socketRef.current.on("connect", () => {
-                    console.log("Socket connected:", socketRef.current.id);
+                    console.log("🚀 Connected, Socket ID: ", socketRef.current.id);
                     setIsConnected(true);
                 });
 

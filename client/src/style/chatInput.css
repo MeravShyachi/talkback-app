@@ -3,8 +3,6 @@
     align-items: center;
     width: 100%;
     padding: 10px;
-    background-color: #f1f1f1;
-    border-top: 1px solid #ccc;
     box-sizing: border-box;
     margin-top: auto; /* Pushes input to the bottom */
     border-radius: 0 0 10px 10px;
@@ -34,6 +32,6 @@
     resize: none;
     overflow-y: auto;
     text-align: left; /* Aligns text to the left */
-    vertical-align: top; /* Aligns text at the top */
+    vertical-align: center; /* Aligns text at the top */
     
 }

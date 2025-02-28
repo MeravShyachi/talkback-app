@@ -19,7 +19,6 @@ const userSocket = (io, socket) => {
     socket.on("join server", async (user) => {
         console.log("User joined server:", user);
         
-        socket.data.userId = user._id;
         await emitConnectedUsers();
     });
 
@@ -27,7 +26,7 @@ const userSocket = (io, socket) => {
         console.log("room: ", room);
         const receiverSocket = await getReceiverSocket(receiverId);
         if (receiverSocket) {
-            io.to(receiverSocket).emit("open chat", { room });            
+            socket.to(receiverSocket).emit("open chat", { room });            
         } else {
             console.log(`Receiver ${receiverId} is not online.`);
         }
@@ -36,6 +35,7 @@ const userSocket = (io, socket) => {
     socket.on("send game request", async({room, sender}) => {
         console.log(`${sender.username} is requesting a game with ${room}`);
         if(room._id){
+            console.log("in if room._id");
             const receiverSocket = await getReceiverSocket(room._id);
             socket.to(receiverSocket).emit("receive game request", {gameRequest: `${sender.username} wants to play a game with you.`});
         }
@@ -44,25 +44,51 @@ const userSocket = (io, socket) => {
         }
     });
 
-    socket.on("respond game request", async({room, accepted}) => {
+    socket.on("respond game request", async({room, accepted, sender}) => {
         if(room._id){
+            console.log("sender: ", room.username)
             const receiverSocket = await getReceiverSocket(room._id);
+            const roomId = `${room._id} ${sender._id}`;
+            console.log("roonId: ", roomId);
             if(accepted){
-                io.to(receiverSocket).emit("game request accepted")
+                socket.to(receiverSocket).emit("game request accepted", roomId)
             } else {
                 socket.to(receiverSocket).emit("game request rejected", { message: "Sorry, your request has been refused." });
             }
         } else {
-            if(accepted){
-                io.to(room).emit("game request accepted")
-            } else {
-                socket.to(room).emit("game request rejected", { message: "Sorry, your request has been refused." });
+            if(room){
+                if(accepted){
+                    console.log("room: ", room);
+                    io.to(room).emit("game request accepted", room)
+                } else {
+                    socket.to(room).emit("game request rejected", { message: "Sorry, your request has been refused." });
+                }
             }
         }
     })
 
     socket.on("disconnect", async () => {
-        console.log("User disconnected:", socket.id);
+        console.log(`User ${socket.id} disconnected. Waiting to confirm exit...`);
+    
+        const userId = socket.data.userId;
+        const roomIds = socket.data.rooms ? [...socket.data.rooms] : [];
+
+        // Set a timeout: If the user doesn't reconnect within 5 seconds, they are declared "left"
+        setTimeout(async () => {
+            const sockets = await io.fetchSockets();
+            const stillConnected = sockets.some(s => s.data.userId === userId);
+
+            if (!stillConnected) {
+                console.log(`User ${userId} did not reconnect, declaring them as left.`);
+                roomIds.forEach(room => {
+                    io.to(room).emit("opponent left", { msg: "Your opponent left the game." });
+                });
+            } else {
+                console.log(`User ${userId} reconnected, game continues.`);
+            }
+
+        }, 9000); // Wait 9 seconds before taking action
+
         await emitConnectedUsers();
     });
 };

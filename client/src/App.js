@@ -7,9 +7,11 @@ import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import Game from "./pages/Game";
 import { SocketProvider } from "./context/SocketContext"; 
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!sessionStorage.getItem("authToken"));
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(!!sessionStorage.getItem("authToken")); // boolean value  
 
   useEffect(() => {
     const checkAuth = () => {
@@ -34,9 +36,23 @@ function App() {
               <Route path="/" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/home" element={<Home />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/game" element={<Game />} />
-            </Routes>
+              <Route 
+                path="/chat" 
+                element={
+                  <AuthProvider>
+                    <Chat />   
+                  </AuthProvider>
+                } 
+              /> 
+              <Route 
+                path="/game" 
+                element={                  
+                  <AuthProvider>
+                    <Game />
+                  </AuthProvider>
+                } 
+              />
+              </Routes>
           </div>
         </SocketProvider>
       </Router>

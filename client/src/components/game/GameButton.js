@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import diceIcon from "../../assets/images/diceIcon.png";
 
 
+
 const GameButton = ({receiver, socket, room, sender}) => {
 
     const [isWaiting, setIsWaiting] = useState(false);
@@ -32,6 +33,7 @@ const GameButton = ({receiver, socket, room, sender}) => {
         socket.emit("respond game request", {
             room,
             accepted,
+            sender
         });
         
         setGameRequest(null); // Close popup
@@ -48,18 +50,27 @@ const GameButton = ({receiver, socket, room, sender}) => {
         }
 
         if(accepted){
-            navigate(`/game?room=${room}`);
+            if(room._id){
+                const roomId = `${receiver._id} ${sender._id}`;
+                socket.emit("join game", ({roomId, sender}))
+                navigate({
+                    pathname: "/game",
+                    search: `?room=${roomId}`
+                  });
+
+            } else {
+                navigate({
+                    pathname: "/game",
+                    search: `?room=${room}`
+                });
+            }
         }
     };
 
     useEffect(() => {
-        console.log(socket);
-
         //Listen for game requests
         socket.on("receive game request", ({ gameRequest }) => {
-            console.log("in receive game req");
             setGameRequest(gameRequest);
-
             // Receiver: Start timeout to auto-close after 1 minute
             receiverTimeoutRef.current = setTimeout(() => {
                 setGameRequest(null); // Close request popup
@@ -68,10 +79,16 @@ const GameButton = ({receiver, socket, room, sender}) => {
         });
 
         //Listen for game responses
-        socket.on("game request accepted", () => {
+        socket.on("game request accepted", (roomId) => {
             setIsWaiting(false); // Close waiting popup
-            navigate(`/game?room=${room}`); // Redirect to game page
-
+            if(room._id){
+                socket.emit("join game", ({roomId, sender}))
+            }
+            navigate({
+                pathname: "/game",
+                search: `?room=${roomId}`
+            });
+            
             // Clear timeouts
             if (timeoutRef.current) {
                 clearTimeout(timeoutRef.current);
@@ -118,7 +135,7 @@ const GameButton = ({receiver, socket, room, sender}) => {
 
     return (
         <>
-        <div className="button-group">
+        <div>
             <button
                 onClick={handleGameButton}
                 className="action-button"

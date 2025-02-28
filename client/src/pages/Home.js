@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import chatIcon from "../assets/images/chatIcon.jpg";
-import diceIcon from "../assets/images/diceIcon.png";
+import chatIcon from "../assets/images/chatIcon.png";
 import "../style/home.css";
 import userApi from "../api/userApi.js";
 import { useNavigate } from "react-router-dom";
 import {useSocket} from "../context/SocketContext.js";
 import GameButton from "../components/game/GameButton.js";
+import GameRulesButton from "../components/game/GameRulesButton.js";
 
 
 const Home = () => {
@@ -19,9 +19,9 @@ const Home = () => {
     const getUsers = async() =>{
         try{
             const response = await userApi.getAll();
-            console.log("Headers sent with request:", response.config.headers); // Debug headers
+            //console.log("Headers sent with request:", response.config.headers); // Debug headers
             const user = response.data.currentUser;
-            console.log("user: ",user);
+            //console.log("user: ",user);
             setCurrentUser(user); 
             setUsers(response.data.users);
 
@@ -31,12 +31,14 @@ const Home = () => {
         }
     };
 
+    //check authorization in sessionStorage
     useEffect(() => {
         if(!sessionStorage.getItem("authToken")){
             navigate("/");
         }
     },[])
 
+    //update users list when a new user register
     useEffect(() => {
         const handleSignup = (event) => {
             if(event.key === "signup") {
@@ -49,19 +51,19 @@ const Home = () => {
 
         window.addEventListener("storage", handleSignup);
         return () => window.removeEventListener("storage", handleSignup);
-
     }, [])
 
+    //join server, update connected users
     useEffect(() => {
-        console.log(isConnected)
+        //console.log(isConnected)
         if(!isConnected || currentUser === undefined) return;
 
-        console.log("current user: ",currentUser);
+       // console.log("current user: ",currentUser);
 
         socket.emit("join server", currentUser)
 
         socket.on("connected users", (userIds) => {
-            console.log("userIds: ", userIds)
+            //console.log("userIds: ", userIds)
             setConnectedUsers(userIds);
         });
   
@@ -76,10 +78,8 @@ const Home = () => {
         }
           
     },[currentUser, socket, isConnected])
-
+  
     
-
-      
     const handleChatButton = (e, userId) => {
         e.preventDefault(); //prevent reload of the page.
         const room = `${userId} ${currentUser?._id}`;
@@ -97,6 +97,7 @@ const Home = () => {
 
     return ( 
         <div className="home">
+            <GameRulesButton />
             <div className="contactContainer">
             <h2>Welcome {currentUser?.username}!</h2>
                 <div className="contacts">

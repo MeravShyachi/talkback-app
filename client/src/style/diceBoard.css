@@ -1,0 +1,170 @@
+ 
+  .dice-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    /* margin-top: 40px; */
+    padding: 20px;
+  }
+  
+  .dice {
+    width: 60px;
+    height: 60px;
+    background: rgb(40, 177, 201);
+    border: 3px solid rgba(116, 187, 187, 0.384);
+    border-radius: 10px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Opponent Dice Styling */
+  .opponent-dice-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+
+  .opponent-dice {
+    width: 40px; /* Same size as normal dice */
+    height: 40px;
+    background-color: rgb(216, 49, 105); /* Gray color */
+    border: 3px solid rgba(228, 64, 119, 0.384);
+
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  /* Center the "?" inside the opponent's dice */
+  .dice-question-mark {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+  }
+  
+  /* 🎲 Dice Dot Style */
+  .dot {
+    width: 10px;
+    height: 10px;
+    background: rgb(255, 255, 255);
+    border-radius: 50%;
+    position: absolute;
+  }
+  
+  /* 🎲 Positioning Dots for Each Dice Face */
+  .dice-1 .dot:nth-child(1) {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .dice-2 .dot:nth-child(1) {
+    left: 15px;
+    top: 15px;
+  }
+  .dice-2 .dot:nth-child(2) {
+    right: 15px;
+    bottom: 15px;
+  }
+  
+  .dice-3 .dot:nth-child(1) {
+    left: 15px;
+    top: 15px;
+  }
+  .dice-3 .dot:nth-child(2) {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .dice-3 .dot:nth-child(3) {
+    right: 15px;
+    bottom: 15px;
+  }
+  
+  .dice-4 .dot:nth-child(1) {
+    left: 15px;
+    top: 15px;
+  }
+  .dice-4 .dot:nth-child(2) {
+    right: 15px;
+    top: 15px;
+  }
+  .dice-4 .dot:nth-child(3) {
+    left: 15px;
+    bottom: 15px;
+  }
+  .dice-4 .dot:nth-child(4) {
+    right: 15px;
+    bottom: 15px;
+  }
+  
+  .dice-5 .dot:nth-child(1) {
+    left: 15px;
+    top: 15px;
+  }
+  .dice-5 .dot:nth-child(2) {
+    right: 15px;
+    top: 15px;
+  }
+  .dice-5 .dot:nth-child(3) {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .dice-5 .dot:nth-child(4) {
+    left: 15px;
+    bottom: 15px;
+  }
+  .dice-5 .dot:nth-child(5) {
+    right: 15px;
+    bottom: 15px;
+  }
+  
+  .dice-6 .dot:nth-child(1) {
+    left: 15px;
+    top: 10px;
+  }
+  .dice-6 .dot:nth-child(2) {
+    right: 15px;
+    top: 10px;
+  }
+  .dice-6 .dot:nth-child(3) {
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .dice-6 .dot:nth-child(4) {
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .dice-6 .dot:nth-child(5) {
+    left: 15px;
+    bottom: 10px;
+  }
+  .dice-6 .dot:nth-child(6) {
+    right: 15px;
+    bottom: 10px;
+  }
+  
+  
+  /* 🎲 Rolling Animation */
+  @keyframes roll {
+    0% { transform: rotate(0deg); }
+    20% { transform: rotate(90deg); }
+    40% { transform: rotate(180deg); }
+    60% { transform: rotate(270deg); }
+    80% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+  }
+  
+  .rolling {
+    animation: roll 1s ease-in-out infinite;
+  }
+  

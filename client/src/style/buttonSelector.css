@@ -1,0 +1,122 @@
+/* Button Selector Container */
+.button-selector {
+    text-align: center;
+    margin-top: 30px;
+    width: 100%; /* Full width */
+}
+
+/* Sections (Times & Numbers) */
+.section {
+    margin-bottom: 20px;
+}
+
+/* Buttons Container */
+.buttons {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1vw; /* Responsive gap */
+    justify-content: center;
+}
+
+/* General Button Styling */
+.btn {
+    width: 7vw; /* Responsive width */
+    max-width: 40px;
+    height: 7vw;
+    max-height: 40px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: black;
+    border: 2px solid rgb(107, 203, 78);
+    border-radius: 50%;
+    background-color: rgb(196, 229, 196);
+    cursor: pointer;
+    transition: 0.3s;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Hover effect */
+.btn:hover {
+    background-color: rgb(232, 129, 158);
+}
+
+/* Selected (Active) */
+.btn.selected {
+    background-color: rgb(205, 95, 126);
+    color: white;
+    border-color: rgb(153, 200, 153);
+}
+
+/* Disabled Buttons */
+.btn:disabled {
+    background-color: rgb(151, 147, 138);
+    color: white;
+    border-color: rgb(222, 141, 141);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.button button{
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 19px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+/* Send Button */
+.button .send-button {
+    background: #24a332;
+    color: white;
+}
+
+/* Send Button Hover */
+.send-button:hover {
+    background: #0f5016;
+    transform: scale(1.07);
+}
+
+/* Hide disabled send button */
+.send-button:disabled {
+    visibility: hidden;
+}
+
+/* Liar Buttons Container */
+
+
+/* Liar Button */
+.button .liar-button {
+    margin-right : 15px;
+    background: rgb(159, 33, 5);
+    color: white;
+}
+
+/* Liar Button Hover */
+.liar-button:hover {
+    background: rgb(95, 26, 14);
+    transform: scale(1.07);
+}
+
+.button .exact-button {
+    background: rgb(50, 188, 230);
+    color: white;
+}
+
+.exact-button:hover {
+    background: rgb(14, 65, 95);
+    transform: scale(1.07);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    .btn {
+        width: 12vw;
+        height: 12vw;
+        font-size: 0.9rem;
+    }
+}

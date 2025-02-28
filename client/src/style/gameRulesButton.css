@@ -1,0 +1,113 @@
+
+  .game-rules-container {
+    position: fixed;
+    bottom: 5vh; /* Adjust this if needed */
+    left: 18vw; /* Adjust this to align with the blue square */
+    z-index: 1001; /* Ensures the box is on top of other components */
+  }
+  
+  /* Info Button Styling */
+  .info-button {
+    width: 40px;
+    height: 40px;
+    background-color: #28aee7;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    font-family:'Georgia', serif;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.3s ease;
+  }
+  
+  .info-button:hover {
+    background-color: #0d407a;
+    transform: scale(1.07);
+  }
+  
+  /* Tooltip Styling */
+  .info-button:hover::after {
+    content: "Game Rules";
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: black;
+    color: white;
+    font-size: 12px;
+    font-family: "Quicksand";
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  
+  /* Rules Box Styling */
+  .rules-box {
+    margin-bottom: 30px;
+    position: absolute;
+    bottom: 0;
+    left: 50px;
+    width: 320px;
+    max-height: 400px; /* Limit height to prevent overflow */
+    padding: 15px;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid #ccc;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    font-size: 14px;
+    color: #333;
+    overflow-y: auto; /* Enables scrolling */
+    text-align: left;
+    line-height: 1.6;
+  }
+  
+  /* Title Styling */
+  .rules-box h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  /* Section Headings */
+  .rules-box h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 15px;
+    margin-bottom: 5px;
+  }
+  
+  /* Paragraph Spacing */
+  .rules-box p {
+    margin: 8px 0;
+    font-size: 14px;
+  }
+  
+  /* Bullet List */
+  .rules-box ul {
+    padding-left: 20px;
+    margin: 5px 0;
+  }
+  
+  .rules-box ul li {
+    margin-bottom: 5px;
+  }
+  
+  /* Numbered List */
+  .rules-box ol {
+    padding-left: 20px;
+    margin: 5px 0;
+  }
+  
+  .rules-box ol li {
+    margin-bottom: 5px;
+    padding-left: 5px;
+  }
+  

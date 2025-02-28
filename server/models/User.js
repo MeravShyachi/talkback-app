@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 
 
-const schema = mongoose.Schema({
+const userSchema = mongoose.Schema({
     username: {
         type: String,
         required: true,
@@ -20,7 +20,7 @@ const schema = mongoose.Schema({
 })
 
 // fire a function before doc saved to db (to create a hash password before saving to the db)
-schema.pre('save', async function (next){
+userSchema.pre('save', async function (next){
     // Only hash the password if it's new or has been modified
     if (this.isModified('password')) {
         this.password = await bcrypt.hash(this.password, 10);
@@ -28,7 +28,7 @@ schema.pre('save', async function (next){
     next();
 });
 
-schema.set("toJSON", {
+userSchema.set("toJSON", {
     transform: (doc, ret) => {
       delete ret.password;
       delete ret.refresh_token;
@@ -36,4 +36,4 @@ schema.set("toJSON", {
     }
 });
 
-export default mongoose.model("User", schema)
+export default mongoose.model("User", userSchema);
