@@ -30,7 +30,6 @@ export const addMessage = async(req, res) => {
 
     try{
         const {from, to, message} = req.body;
-        console.log("req.body: ", req.body)
         const data = await Messages.create({
             content: {text: message},
             users: [from, to],

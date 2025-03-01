@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useRef, useEffect, useState } from "react";
 import { socket as socketInstance } from "../utils/socket";
-import { useNavigate } from "react-router-dom";
+import { setSessionAuthToken, removeSessionAuthToken } from "../utils/sessionToken";
+import axiosInstance from "../api/axiosInstance"; // Import axios for refresh API
 
 const SocketContext = createContext(); 
 
@@ -11,22 +12,10 @@ export const SocketProvider = ({ children, isAuthenticated }) => {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        console.log("isAuthenticated: ", isAuthenticated);
+
         if (isAuthenticated) {
             if (!socketRef.current.connected) {
-                const token = sessionStorage.getItem("authToken");
-                socketRef.current.auth = { token };
-                socketRef.current.connect();
-
-                socketRef.current.on("connect", () => {
-                    console.log("🚀 Connected, Socket ID: ", socketRef.current.id);
-                    setIsConnected(true);
-                });
-
-                socketRef.current.on("disconnect", () => {
-                    console.log("Socket disconnected");
-                    setIsConnected(false);
-                });
+                connectSocket();
             }
         }
 
@@ -35,7 +24,26 @@ export const SocketProvider = ({ children, isAuthenticated }) => {
                 socketRef.current.disconnect();
             }
         };
+
     }, [isAuthenticated]);
+
+    const connectSocket = () => {
+        const userId = sessionStorage.getItem("userId"); // Get userId from sessionStorage
+        if (!userId) return console.error("❌ No userId found in sessionStorage");
+
+        socketRef.current.auth = { userId }; // 🔥 Send userId to the server
+        socketRef.current.connect();
+
+        socketRef.current.on("connect", () => {
+            console.log("🚀 Connected, Socket ID:", socketRef.current.id);
+            setIsConnected(true);
+        });
+
+        socketRef.current.on("disconnect", () => {
+            console.log("⚠️ Socket disconnected");
+            setIsConnected(false);
+        });
+    };
 
     return (
         <SocketContext.Provider value={{ socket: socketRef.current, isConnected }}>

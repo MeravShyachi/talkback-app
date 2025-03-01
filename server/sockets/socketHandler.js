@@ -5,20 +5,20 @@ import gameSocket from "./gameSocket.js";
 
 const socketHandler = (io) => {
     io.on("connection", (socket) => {
-        console.log(`User connected: ${socket.id}`);
 
-        // Extract token from `socket.auth`
-        const token = socket.handshake.auth?.token;
-        if (token) {
-            try {
-                const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET); // Verify token
-                console.log("decoded user: ",decoded._id)
-                socket.data.userId = decoded._id; // Store userId in socket data
-                console.log(`Stored userId for socket ${socket.id}: ${socket.data.userId}`);
-            } catch (error) {
-                console.log("Invalid token:", error.message);
-            }
+        const userId = socket.handshake.auth?.userId; // Get userId from auth data
+
+        if (!userId) {
+            console.log("❌ No userId provided. Disconnecting socket...");
+            socket.disconnect();
+            return;
         }
+
+        // 🔥 Store userId in socket data
+        socket.data.userId = userId;
+        console.log(`🔓 User connected: ${userId}, Socket ID: ${socket.id}`);
+
+
         // Handle user events
         userSocket(io, socket);
 

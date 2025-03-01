@@ -34,7 +34,6 @@ export const createGame = async (roomId, player, yourTurn, diceArray) => {
 export const updateGameState = async (roomId, updatedData) => {
     try {
         const response = await axiosInstance.put(`/update-gmae/${roomId}`, updatedData);
-       // console.log("in updateGmaeState, response: ", response)
         return response.data;
     } catch (error) {
         console.error("Error updating game state:", error);

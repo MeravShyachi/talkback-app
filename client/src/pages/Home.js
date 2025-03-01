@@ -19,9 +19,7 @@ const Home = () => {
     const getUsers = async() =>{
         try{
             const response = await userApi.getAll();
-            //console.log("Headers sent with request:", response.config.headers); // Debug headers
             const user = response.data.currentUser;
-            //console.log("user: ",user);
             setCurrentUser(user); 
             setUsers(response.data.users);
 
@@ -33,13 +31,7 @@ const Home = () => {
 
     //check authorization in sessionStorage
     useEffect(() => {
-        if(!sessionStorage.getItem("authToken")){
-            navigate("/");
-        }
-    },[])
-
-    //update users list when a new user register
-    useEffect(() => {
+        //update users list when a new user register
         const handleSignup = (event) => {
             if(event.key === "signup") {
                 getUsers();
@@ -47,7 +39,11 @@ const Home = () => {
             }
         }
 
-        getUsers();
+        if(!sessionStorage.getItem("authToken")){
+            navigate("/");
+        } else {
+            getUsers();
+        }
 
         window.addEventListener("storage", handleSignup);
         return () => window.removeEventListener("storage", handleSignup);
@@ -55,15 +51,11 @@ const Home = () => {
 
     //join server, update connected users
     useEffect(() => {
-        //console.log(isConnected)
         if(!isConnected || currentUser === undefined) return;
 
-       // console.log("current user: ",currentUser);
-
-        socket.emit("join server", currentUser)
+        socket.emit("join server");
 
         socket.on("connected users", (userIds) => {
-            //console.log("userIds: ", userIds)
             setConnectedUsers(userIds);
         });
   

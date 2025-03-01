@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "../../style/buttonSelector.css"; // Import CSS
 
-const ButtonSelector = ({socket, room, yourTurn, opponentTimes, opponentNumber, diceArray, setTurnTimer}) => {
-  const timesOptions = Array.from({ length: 12 }, (_, i) => i + 1); // [1-12]
+const ButtonSelector = ({socket, room, yourTurn, opponentTimes, opponentNumber, diceArray, numDice, opponentNumDice}) => {
+  const timesOptions = Array.from({ length: 10 }, (_, i) => i + 1); // [1-12]
   const numberOptions = [2, 3, 4, 5, 6]; // [2-6]
 
   const [selectedTimes, setSelectedTimes] = useState(null);
@@ -22,7 +22,6 @@ const ButtonSelector = ({socket, room, yourTurn, opponentTimes, opponentNumber, 
     if(socket){
       socket.emit("end turn", {room, selectedTimes, selectedNumber});
     }
-    setTurnTimer(40);
   }
 
   const handleLiarButton = () => {
@@ -54,7 +53,7 @@ const ButtonSelector = ({socket, room, yourTurn, opponentTimes, opponentNumber, 
               onClick={() => handleTimesClick(time)}
               disabled={
                 !yourTurn ||
-                (yourTurn && time < opponentTimes) || 
+                (yourTurn && time < opponentTimes || time > (numDice+opponentNumDice) ) || 
                 (yourTurn && selectedNumber && selectedNumber <= opponentNumber && time === opponentTimes)
               }
             >

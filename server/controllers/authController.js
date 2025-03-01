@@ -16,7 +16,7 @@ export const login = async (req, res) => {
         const isPasswordCorrect = await bcrypt.compare(req.body.user.password, user.password);
 
         if (!isPasswordCorrect) {
-            return res.status(401).json({ message: 'Incorrect password or username.' });
+            return res.status(403).json({ message: 'Incorrect password or username.' });
         }
 
         const accessToken = generateAccessToken(user);
@@ -91,35 +91,42 @@ export const verifyToken = async(req, res) => {
 
 export const refreshToken = async(req, res) => {
     try{
-        console.log("in refresh token");
-        const user = await User.findOne({username: req.user.username});
+        console.log("In refresh token request...");
+        const { userId } = req.body;
 
-        if(!user){
-            return res.status(401).json({message: "No user found"});
+        if (!userId) {
+            return res.status(400).json({ message: "Username required" });
+        }
+
+
+        // Find user by userId and get refresh token
+        const user = await User.findOne({ _id: userId });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
 
         const refreshToken = user.refresh_token;
+
         console.log("user.refreshToken: ", refreshToken);
         
         if( !refreshToken ||  refreshToken === ""){
-            return res.status(401).json({ message: 'No refresh token in the db' });
+            return res.status(403).json({ message: 'No refresh token in the db' });
         };
-
-        console.log("env Refresh_Token_Sectret: ", process.env.REFRESH_TOKEN_SECRET)
 
         jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decodedUser) => {
             if (err){
                 console.error("Error verifying refresh token:", err);
-                return res.status(401).json({ message: "Invalid refresh token" });
+                return res.status(403).json({ message: "Invalid refresh token" });
             } 
-            console.log("after verify: ",decodedUser);
-            const accessToken = generateAccessToken(decodedUser);
-            return res.json({ accessToken });
-        })
-    }
-    catch(error){
-        console.error("Error in refreshToken:", error);
-        return res.status(500).json({ message: "Internal server error" });
+            console.log("Refresh token verified. Generating new access token...");
+            const newAccessToken = generateAccessToken(decodedUser);
+            return res.json({ accessToken: newAccessToken, userId: decodedUser._id });
+        });
+    
+    } catch(error){
+        console.error("🚨 Unexpected error in refreshToken:", error);
+        return res.status(500).json({ message: "Internal server error. Please try again later." });
     }
 };
 

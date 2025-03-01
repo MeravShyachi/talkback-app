@@ -21,12 +21,10 @@ export const AuthProvider = ({ children}) => {
         const verifyUser = async () => {
             try {
                 const response = await authApi.protect();
-                //console.log("current user: ", response.data);
-                //console.log("room: ", room);
                 setCurrentUser(response.data);
 
             } catch (err) {
-                //console.error("Token verification failed:", err);
+                console.error("Token verification failed:", err);
                 window.close();
             }
         };
@@ -39,7 +37,6 @@ export const AuthProvider = ({ children}) => {
     useEffect(() => {
         if (!room || !currentUser) return;
 
-        //console.log(`room: ${room}, currentUser: ${currentUser}`);
         const ids = room.split(" ");
         const otherUserId = ids.find((id) => id !== currentUser._id);
 
@@ -47,10 +44,10 @@ export const AuthProvider = ({ children}) => {
             const fetchReceiver = async () => {
                 try {
                     const response = await userApi.getUser(otherUserId);
-                    //console.log("otherUser: ", response.data);
+
                     setOtherUser(response.data);
                 } catch (err) {
-                    //console.error("Couldn't get receiver details", err);
+                    console.error("Couldn't get receiver details", err);
                 } finally {
                     setLoading(false);
                 }

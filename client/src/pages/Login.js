@@ -50,8 +50,12 @@ const Login = () => {
             }
             const res = await authApi.login(user);
             console.log('login successful:', res.data);
-            setSessionAuthToken(res.data.accessToken);
-            localStorage.setItem("login", JSON.stringify({ userId: res.data.user._id, token: res.data.accessToken, timestamp: Date.now() })); // Triggers event for other tabs
+            setSessionAuthToken(res.data.accessToken, res.data.user._id);
+            localStorage.setItem("login", JSON.stringify({
+               userId: res.data.user._id,
+               token: res.data.accessToken,
+               timestamp: Date.now() 
+            })); // Triggers event for other tabs
             navigate("/home", { replace: true })
           }
           catch(error){

@@ -19,7 +19,7 @@ app.use(cors({
 }));
 
 app.use('/', userRoutes);
-app.use('/', authRoutes);
+app.use('/auth', authRoutes);
 app.use('/', messageRoutes);
 app.use('/', gameRoutes)
 

@@ -70,8 +70,7 @@ const Signup = () => {
           }
           const res = await authApi.signup(user);
           console.log('Registration successful:', res.data.accessToken);
-          setSessionAuthToken(res.data.accessToken);
-          console.log("after setSession");
+          setSessionAuthToken(res.data.accessToken, res.data.user._id);
           localStorage.setItem("signup", JSON.stringify({ timestamp: Date.now() }));
           navigate("/home", { replace: true })
       }

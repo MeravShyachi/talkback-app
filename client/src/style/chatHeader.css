@@ -76,46 +76,19 @@
     z-index: 10; /* Ensure tooltip is above other elements */
 }
 
-/* .waiting-popup, .game-popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    border: 1px solid #ccc;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    font-weight: normal;
-    font-size: 15px;
-    z-index: 1000;
-}
+/* Responsive behavior */
+@media (max-width: 600px) {
+    .chat-header {
+        font-size: 16px;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
 
-.waiting-popup button {
-    background-color: #dc3545;
-    color: white;
-    margin: 10px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
+    .chat-title {
+        font-size: 14px;
+    }
 
-.game-popup button {
-    margin: 10px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    .button-group {
+        gap: 5px;
+    }
 }
-
-.game-popup button:first-child {
-    background-color: #28a745;
-    color: white;
-}
-
-.game-popup button:last-child {
-    background-color: #dc3545;
-    color: white;
-} */

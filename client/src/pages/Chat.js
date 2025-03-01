@@ -17,12 +17,11 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [arrivalMessage, setArrivalMessage] = useState(null);
     const [isMuted, setIsMuted] = useState(false);
-    const isMutedRef = useRef(isMuted);
+    const isMutedRef = useRef(isMuted); 
 
     // Fetch messages
     useEffect(() => {
         if (!receiver || !sender) return;
-        console.log(`useEffect 4, receiver: ${receiver}, sender: ${sender}`);
 
         const fetchMessages = async () => {
             try {
@@ -46,6 +45,7 @@ const Chat = () => {
         })
 
         return () => {
+            socket.off("user has joined");
             socket.off("user has left");
         }
     }, [receiver, sender]);
@@ -53,18 +53,14 @@ const Chat = () => {
     
     // Join chat room when ready
     useEffect(() => {
-        console.log(`useEffect 5, join room: ${room}`);
-
         if (!room || !isConnected) return;
 
-        console.log("Joining room:", room);
         socket.emit("join room", room);
 
     }, [room, isConnected]);
 
     // Listen for messages only when socket is ready
     useEffect(() => {
-        console.log(`useEffect 6, isConnected: ${isConnected}`);
         if (!isConnected) return;
 
         const playNotificationSound = () => {
@@ -75,7 +71,6 @@ const Chat = () => {
         };
 
         socket.on("receive message", (msg) => {
-            console.log("Received new message:", msg);
             setArrivalMessage(msg);
 
             playNotificationSound();
@@ -88,25 +83,18 @@ const Chat = () => {
 
     // Handle login/logout across tabs
     useEffect(() => {
-        console.log(`useEffect 7`);
-
         const handleLoginLogout = (event) => {
             if (event.key === "logout") {
                 const logoutData = JSON.parse(event.newValue);
-                console.log("logout data", logoutData)
                 if (sender?._id === logoutData.userId) {
-                    //socket.disconnect();
                     removeSessionAuthToken();
                     toast.error("You've been logged out. Please log in again.", toastOptions);
                 }
             }
             if (event.key === "login") {
                 const loginData = JSON.parse(event.newValue);
-                console.log("login data", loginData)
                 if (sender?._id === loginData.userId) {
-                    //socket.disconnect();
-                    console.log(loginData.token);
-                    setSessionAuthToken(loginData.token);
+                    setSessionAuthToken(loginData.token, loginData.userId);
                     toast.info("You've been logged in.", toastOptions)
                 }
             }
@@ -118,8 +106,6 @@ const Chat = () => {
 
     // Add new messages
     useEffect(() => {
-        console.log(`useEffect 8, arrivalMessage ${arrivalMessage}`);
-
         if (arrivalMessage) {
             setMessages((prev) => [...prev, arrivalMessage]);
         }

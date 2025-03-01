@@ -15,7 +15,6 @@ function App() {
 
   useEffect(() => {
     const checkAuth = () => {
-      console.log("in check auth");
       setIsAuthenticated(!!sessionStorage.getItem("authToken"));
     };
 

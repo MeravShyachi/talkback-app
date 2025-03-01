@@ -22,7 +22,6 @@ const chatSocket = (io, socket) => {
     socket.on("disconnecting", () => {
         for (const room of socket.rooms) {
           if (room !== socket.id) {
-            console.log("in if")
             socket.to(room).emit("user has left");
           }
         }

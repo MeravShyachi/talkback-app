@@ -1,15 +1,16 @@
 import "../style/game.css";
 import { ToastContainer, toast } from "react-toastify";
-import { gameToasts, errorGameToasts } from "../utils/toast";
+import { gameToasts, errorGameToasts, toastOptions } from "../utils/toast";
 import DiceBoard from "../components/game/DiceBoard";
 import ButtonSelector from "../components/game/ButtonSelector";
 import OpponentBid from "../components/game/OpponentBid.js";
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.js";
 import {useSocket} from "../context/SocketContext.js";
 import { useNavigate } from "react-router-dom";
 import {getGameState, createGame, updateGameState, deleteGame} from "../api/gameApi.js";
 import GameRulesButton from "../components/game/GameRulesButton.js";
+import { setSessionAuthToken, removeSessionAuthToken } from "../utils/sessionToken.js";
 
 
 const Game = () => {
@@ -33,7 +34,6 @@ const Game = () => {
     // Handle leaving the game page
     useEffect(() => {
         const handleLeaveGame = async() => {
-            console.log("in leave game")
             if (socket && room) {
                 await deleteGame(room, currentUser._id);
                 socket.emit("leave room", {room, username: currentUser.username});
@@ -47,6 +47,29 @@ const Game = () => {
             window.removeEventListener("leaveGame", handleLeaveGame);
         };
     }, [socket, room, currentUser]);
+
+    // Handle login/logout across tabs
+    useEffect(() => {
+        const handleLoginLogout = (event) => {
+            if (event.key === "logout") {
+                const logoutData = JSON.parse(event.newValue);
+                if (currentUser?._id === logoutData.userId) {
+                    removeSessionAuthToken();
+                    toast.error("You've been logged out. Please log in again.", toastOptions);
+                }
+            }
+            if (event.key === "login") {
+                const loginData = JSON.parse(event.newValue);
+                if (currentUser?._id === loginData.userId) {
+                    setSessionAuthToken(loginData.token, loginData.userId);
+                    toast.info("You've been logged in.", toastOptions)
+                }
+            }
+        };
+
+        window.addEventListener("storage", handleLoginLogout);
+        return () => window.removeEventListener("storage", handleLoginLogout);
+    }, [currentUser]);
 
     // Set starter or fetch game data from DB when first render 
     useEffect(() => {
@@ -96,7 +119,7 @@ const Game = () => {
            
         };
         
-        if (yourTurn && gameStarted && !showGameOverPopup) {
+        if (yourTurn && gameStarted && !showGameOverPopup && !isWaiting) {
             timer = setInterval(() => {
                 setTurnTimer(prev => {
                     if (prev <= 1) {
@@ -133,11 +156,11 @@ const Game = () => {
     useEffect(() => {
 
         const updateGameStartedToDB = async() => {
-            console.log("game started: ", gameStarted);
 
             const response = await updateGameState(room, {
                 player: currentUser._id,
                 gameStarted: false,
+                turnTimer: 40,
                 opponentNumber: null,
                 opponentTimes: null
             })
@@ -175,7 +198,6 @@ const Game = () => {
             const newArray = Array(numDice).fill(1);
             const response = await updateGameState(room, { player: currentUser._id, numDice})
             if(!gameStarted){
-                console.log("numDice changed, updating in DB:", numDice);
                 setDiceArray(newArray);
                 const res = await updateGameState(room, {player: currentUser._id, diceArray: newArray});
                 if(res){
@@ -216,7 +238,6 @@ const Game = () => {
         socket.emit("join game", ({roomId: room, sender: currentUser}));
 
         socket.on("roll dice", ()=> {
-            console.log("Opponent rolled dice!");
 
             setOpponentRollDice(true);
 
@@ -254,14 +275,18 @@ const Game = () => {
 
         socket.on("turn ended", ()=>{
             setYourTurn(prevTurn => !prevTurn);
+            setTurnTimer(40);
         })
 
-        socket.on("you lost", () => {
-            handleLost()
+        socket.on("you lost", ({typeOfLost}) => {
+            toast.error(`${typeOfLost} button bressed!\nYou lost..`, errorGameToasts);
+            handleLost(typeOfLost)
         });
 
-        socket.on("you won", async() => {
+        socket.on("you won", async({typeOfLost}) => {
+            toast.info(`${typeOfLost} button bressed!\nYou won!`, errorGameToasts);
             setYourTurn(false);
+            setTurnTimer(40);
             const response = await updateGameState(room, {player: currentUser._id, gameStarted: false});
             if(response){
                 setGameStarted(false);
@@ -278,11 +303,11 @@ const Game = () => {
                 player: currentUser._id,
                 numDice: 5,
                 opponentNumDice: 5,
+                turnTimer: 40,
                 diceArray: Array(5).fill(1),
                 isWaiting: null,
                 showGameOverPopup: null
             })
-            console.log("in start new game, response: ", response);
             if(response){
                 resetGame(); // Restart game if both players agree
             }
@@ -325,11 +350,11 @@ const Game = () => {
             const totalCount = countTotalOccurrences(opponentDiceArray, targetNumbers) + 
             countTotalOccurrences(diceArray, targetNumbers);
 
-            if(times > totalCount){
-                handleLost();
-                toast.error(`You lost`, gameToasts);
-            } else {
-                socket.emit("set winner", {room, won: false});
+            if(times > totalCount){ //you lost
+                handleLost("Liar");
+                toast.error(`Liar button bressed!\nYou lost..`, errorGameToasts);
+            } else { //you won
+                socket.emit("set winner", {room, won: false, typeOfLost: "Liar"});
                 setYourTurn(false);
                 setGameStarted(false);
             }
@@ -343,16 +368,15 @@ const Game = () => {
             // Count occurrences in both arrays and sum them up
             const totalCount = countTotalOccurrences(opponentDiceArray, targetNumbers) + 
             countTotalOccurrences(diceArray, targetNumbers);
-            console.log("totalCount: ", totalCount);
-            console.log("times: ", times);
             
-            if(times === totalCount){
-                handleLost();
-                toast.error(`You lost`, gameToasts);
-            } else {
-                socket.emit("set winner", {room, won: false});
+            if(times === totalCount){ //you lost
+                handleLost("Exact");
+                toast.error(`Exact button pressed!\nYou lost..`, errorGameToasts);
+            } else { //you won
+                socket.emit("set winner", {room, won: false, typeOfLost: "Exact"});
                 setYourTurn(false);
                 setGameStarted(false);
+                setTurnTimer(40);
             }
         
         })
@@ -375,17 +399,15 @@ const Game = () => {
     },[diceArray, opponentNumber, opponentTimes])
 
 
-    const handleLost = async() => {
-        console.log("in handleLost, numDice: ", numDice);
-
+    const handleLost = async(typeOfLost) => {
         setNumDice(prev => {
             if(prev > 1){
                 setGameStarted(false);
                 setYourTurn(true);
-                socket.emit("set winner", { room, won: true });
+                setTurnTimer(40);
+                socket.emit("set winner", { room, won: true, typeOfLost});
                 return prev-1;
             } else {
-                console.log("in else for game over");
                 setYourTurn(false);
                 setShowGameOverPopup("You lost this time..");
                 socket.emit("game over", { room });
@@ -448,6 +470,7 @@ const Game = () => {
         setOpponentNumber(null);
         setDiceArray(Array(5).fill(1));
         setGameStarted(false);
+        setTurnTimer(40);
         setShowGameOverPopup(false);
         setIsWaiting(null);
     };
@@ -498,7 +521,8 @@ const Game = () => {
                 opponentTimes={opponentTimes} 
                 opponentNumber={opponentNumber}
                 diceArray={diceArray}
-                setTurnTimer={setTurnTimer}
+                numDice={numDice}
+                opponentNumDice={opponentNumDice}
             />
             {yourTurn && gameStarted && (
                 <div className="timer">

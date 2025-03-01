@@ -6,7 +6,6 @@ const gameSocket =(io, socket) => {
 
         const roomSockets = io.sockets.adapter.rooms.get(roomId);
         if (roomSockets && roomSockets.has(socket.id)) {
-            console.log(`${sender.username} is already in the room ${roomId}`);
             return;
         }
     
@@ -17,11 +16,9 @@ const gameSocket =(io, socket) => {
         
         socket.join(roomId);
         socket.data.rooms.add(roomId); // Track the room
-        //console.log(`${sender.username} joined room: ${roomId}`);
     });
 
     socket.on("roll dice", ({room}) => {
-        //console.log("in roll dice");
         socket.to(room).emit("roll dice");
     })
 
@@ -38,13 +35,11 @@ const gameSocket =(io, socket) => {
         socket.to(room).emit("exact", {opponentDiceArray, times, num});
     });
 
-    socket.on("set winner", ({room, won}) => {
+    socket.on("set winner", ({room, won, typeOfLost}) => {
         if(won){
-            //console.log("in you won");
-            socket.to(room).emit("you won");
+            socket.to(room).emit("you won", {typeOfLost});
         } else {
-            //console.log("in you lost");
-            socket.to(room).emit("you lost");
+            socket.to(room).emit("you lost", {typeOfLost});
         }
     });
 
@@ -61,7 +56,6 @@ const gameSocket =(io, socket) => {
     })
 
     socket.on("quit game", ({room, username}) => {
-        console.log("in quit game");
         socket.to(room).emit("opponent left", { msg: `Sorry...\n${username} quit the game..\nExiting...`});
     })
 
@@ -71,7 +65,6 @@ const gameSocket =(io, socket) => {
         }
         playersResponses[room][userId] = true; // Mark this player as ready
 
-        console.log("length: ",Object.keys(playersResponses[room]).length)
         // Check if both players have responded
         if (Object.keys(playersResponses[room]).length === 2) {
             io.to(room).emit("start new game"); // Tell both players to restart
@@ -80,7 +73,6 @@ const gameSocket =(io, socket) => {
     })
 
     socket.on("leave room", ({room, username}) => {
-        console.log(`${username} leave game.`);
 
         if (socket.data.rooms) {
             socket.data.rooms.delete(room); // Remove only this room

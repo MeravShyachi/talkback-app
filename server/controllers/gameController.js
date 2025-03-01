@@ -23,7 +23,6 @@ export const updateGameState = async (req, res) => {
             { $set: req.body },
             { new: true }
         );
-        console.log("updatedGame: ", updatedGame);
         res.json(updatedGame);
     } catch (error) {
         console.log(error);
