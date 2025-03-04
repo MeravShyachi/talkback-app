@@ -70,6 +70,13 @@
     align-items: center;
     justify-content: space-between; /* Ensures items align to the left and right */
     padding: 8px 0;
+    flex-wrap: wrap;
+  }
+
+  .contactItem span {
+    min-width: 100px; /* ✅ Ensures enough space for text */
+    flex-wrap: wrap; /* ✅ Allow text to wrap */
+    word-wrap: break-word; /* ✅ Break long words if necessary */
   }
   
   .contactActions {
@@ -89,3 +96,4 @@
     width: 40px; /* Adjust size */
     height: 40px;
   }
+

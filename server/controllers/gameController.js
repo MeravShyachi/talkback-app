@@ -8,10 +8,11 @@ export const createGame = async (req, res) => {
             { $set: req.body},
             { new: true, upsert: true } // Return updated document, create if not found
         );
+
         res.status(201).json(updatedGame);
     } catch (error) {
         console.error("Error creating or updating game:", error);
-        res.status(500).json({ message: "Server error", error });
+        res.status(502).json({ message: "Server error: Error creating or updating game. \nLeaving the game..", error });
     }
 };
 
@@ -23,10 +24,11 @@ export const updateGameState = async (req, res) => {
             { $set: req.body },
             { new: true }
         );
+
         res.json(updatedGame);
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: "Server error", error });
+        res.status(502).json({ message: "Server error: Error updating game state. \nLeaving the game..", error });
     }
 };
 
@@ -38,7 +40,7 @@ export const getGameState = async (req, res) => {
         res.json(game);
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: "Server error", error });
+        res.status(502).json({ message: "Server error", error });
     }
 };
 

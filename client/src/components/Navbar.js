@@ -1,15 +1,26 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import Logout  from "./Logout.js";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import {handleLogout}  from "../utils/Logout.js";
+import { removeSessionAuthToken } from "../utils/sessionToken";
 import "../style/navbar.css";
 
 
 const Navbar = () => {
     const location = useLocation(); // Get the current route
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const handleHome = () => {
         window.dispatchEvent(new Event("leaveGame"));
         navigate("/home"); 
+    };
+
+    const handleBack = () => {
+        const room = searchParams.get("room");
+        console.log(room);
+        window.dispatchEvent(new Event("leaveGame"));
+        navigate(`/chat?room=${room}`); 
     };
 
     const handleExit = () => {
@@ -27,18 +38,23 @@ const Navbar = () => {
                     </>
                 )}
                 {location.pathname === "/home" && (      
-                    <Logout/>   
+                    <Link to="/" onClick={handleLogout}>Logout</Link>
                 )}
                 {(location.pathname === "/chat") && (
                     <button onClick={handleExit} className="exitButton">
                         Exit
                     </button>
                 )}
-                {(location.pathname === "/game") && (
+                {(location.pathname === "/home/game") && (
                     <button onClick={handleHome} className="homeButton">
                         Home
                     </button>
                 )}    
+                {(location.pathname === "/chat/game") && (
+                    <button onClick={handleBack} className="homeButton">
+                        Back
+                    </button>
+                )} 
             </div>    
         </nav>
     );

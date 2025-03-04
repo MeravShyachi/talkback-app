@@ -13,6 +13,7 @@ const GameButton = ({receiver, socket, room, sender}) => {
     const [noResponseMessage, setNoResponseMessage] = useState(null);
     const timeoutRef = useRef(null);
     const receiverTimeoutRef = useRef(null); // Timer for receiver
+    const currentPath = window.location.pathname; // Get current page
     const navigate = useNavigate();
 
 
@@ -50,17 +51,17 @@ const GameButton = ({receiver, socket, room, sender}) => {
         }
 
         if(accepted){
-            if(room._id){
+            if(currentPath === "/home"){
                 const roomId = `${receiver._id} ${sender._id}`;
                 socket.emit("join game", ({roomId, sender}))
                 navigate({
-                    pathname: "/game",
+                    pathname: `${currentPath}/game`,
                     search: `?room=${roomId}`
                   });
 
             } else {
                 navigate({
-                    pathname: "/game",
+                    pathname: `${currentPath}/game`,
                     search: `?room=${room}`
                 });
             }
@@ -81,11 +82,11 @@ const GameButton = ({receiver, socket, room, sender}) => {
         //Listen for game responses
         socket.on("game request accepted", (roomId) => {
             setIsWaiting(false); // Close waiting popup
-            if(room._id){
+            if(currentPath === "/home"){
                 socket.emit("join game", ({roomId, sender}))
             }
             navigate({
-                pathname: "/game",
+                pathname: `${currentPath}/game`,
                 search: `?room=${roomId}`
             });
             

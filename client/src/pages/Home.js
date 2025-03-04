@@ -6,6 +6,10 @@ import { useNavigate } from "react-router-dom";
 import {useSocket} from "../context/SocketContext.js";
 import GameButton from "../components/game/GameButton.js";
 import GameRulesButton from "../components/game/GameRulesButton.js";
+import { showErrorPopup } from "../components/ErrorPopup";
+import { handleLogout } from "../utils/Logout.js";
+
+
 
 
 const Home = () => {
@@ -17,16 +21,15 @@ const Home = () => {
     const { socket, isConnected } = useSocket();
     
     const getUsers = async() =>{
-        try{
-            const response = await userApi.getAll();
-            const user = response.data.currentUser;
-            setCurrentUser(user); 
-            setUsers(response.data.users);
-
-        }catch(error){
-            console.error("Token verification failed:", error);
-            navigate("/"); // Redirect to login if token is invalid
+        const {data, error} = await userApi.getAll();
+        if(error){
+            handleLogout();
+            showErrorPopup(`${error.message}\nRedirecting to login`)
+            return;
         }
+
+        setCurrentUser(data.currentUser); 
+        setUsers(data.users);
     };
 
     //check authorization in sessionStorage

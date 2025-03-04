@@ -15,9 +15,11 @@ export const protect = async(req, res, next) => {
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     const username = decoded.username;
     const currentUser = await User.findOne({username}).select(["username", "_id", "refresh_token"]);
+    //return res.status(404).json({ message: "Unauthorize: User not found" });
     
     if (!currentUser) {
-      return res.status(404).json({ message: "User not found" });
+      console.log("user not found");
+      return res.status(404).json({ message: "Unauthorize: User not found" });
     }
 
     if(currentUser.refresh_token === ""){

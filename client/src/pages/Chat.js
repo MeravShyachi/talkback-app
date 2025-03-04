@@ -24,12 +24,20 @@ const Chat = () => {
         if (!receiver || !sender) return;
 
         const fetchMessages = async () => {
-            try {
-                const response = await messageApi.getMessages(sender, receiver);
-                if (response) setMessages(response.data);
-            } catch (err) {
-                console.error("Couldn't get messages", err);
+            const {data, error} = await messageApi.getMessages(sender, receiver);
+
+            if(error){
+                toast.error(error.message);
             }
+
+            setMessages(data);
+
+            // try {
+            //     const response = await messageApi.getMessages(sender, receiver);
+            //     if (response) setMessages(response.data);
+            // } catch (err) {
+            //     console.error("Couldn't get messages", err);
+            // }
         };
         fetchMessages();
 
@@ -128,18 +136,19 @@ const Chat = () => {
             { room, msg, receiver: receiver?.username },
             async (response) => {
                 if (response.status === "success") {
-                    try {
-                        await messageApi.sendMessage(sender, receiver, msg);
-                        setMessages((prev) =>
-                            prev.map((m) => (m.id === tempId ? { ...m, status: "sent" } : m))
-                        );
-                    } catch (err) {
-                        console.error("Message sending failed:", err);
+                    const {data, error} = await messageApi.sendMessage(sender, receiver, msg);
+
+                    if(error){
                         setMessages((prev) =>
                             prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m))
                         );
                         toast.error("Message failed to send. Check your connection.", toastOptions);
+                        return;
                     }
+
+                    setMessages((prev) =>
+                        prev.map((m) => (m.id === tempId ? { ...m, status: "sent" } : m))
+                    );
                 } else {
                     setMessages((prev) =>
                         prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m))

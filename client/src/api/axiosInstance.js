@@ -1,7 +1,8 @@
 import axios from "axios";
 import {setSessionAuthToken, removeSessionAuthToken} from "../utils/sessionToken";
-import { createRoot } from "react-dom/client";
-import ErrorPopup from "../components/ErrorPopup";
+import { showErrorPopup } from "../components/ErrorPopup";
+import {handleLogout}  from "../utils/Logout.js";
+
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:4000", // Your server's base URL
@@ -20,13 +21,6 @@ axiosInstance.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 );
-
-// Function to show error popup and redirect
-const showErrorPopup = (message) => {
-  const rootElement = document.createElement("div");
-  document.body.appendChild(rootElement);
-  createRoot(rootElement).render(<ErrorPopup message={message} />);
-};
 
 // Handle token expiration and refresh it
 axiosInstance.interceptors.response.use(
@@ -58,15 +52,16 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
         if (refreshError.response?.status === 403 || refreshError.response?.status === 404) {
-          //removeSessionAuthToken();
-          //showErrorPopup("Session expired. Redirecting to login...");
+          handleLogout();
+          showErrorPopup("Session expired. Redirecting to login");
         }
       }
     }
 
     if (error.response?.status === 500) {
       console.error("🚨 Server error:", error.response.data.message);
-      showErrorPopup("Server error. Please try again later.");
+      handleLogout();
+      showErrorPopup("Server error. Please try again later.\n Redirecting to login");
     }
 
     return Promise.reject(error);

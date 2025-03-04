@@ -7,13 +7,14 @@ import OpponentBid from "../components/game/OpponentBid.js";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.js";
 import {useSocket} from "../context/SocketContext.js";
-import { useNavigate } from "react-router-dom";
-import {getGameState, createGame, updateGameState, deleteGame} from "../api/gameApi.js";
+import { useNavigate, useLocation } from "react-router-dom";
+import gameApi from "../api/gameApi.js";
 import GameRulesButton from "../components/game/GameRulesButton.js";
 import { setSessionAuthToken, removeSessionAuthToken } from "../utils/sessionToken.js";
 
 
 const Game = () => {
+    const location = useLocation(); // Get the current route
     const {currentUser, otherUser: opponent, room} = useAuth();
     const {socket, isConnected} = useSocket();
     const [numDice, setNumDice] = useState(5); // Start with 6 dice
@@ -28,15 +29,24 @@ const Game = () => {
     const [showGameOverPopup, setShowGameOverPopup] = useState(null);
     const [isWaiting, setIsWaiting] = useState(null);
     const [turnTimer, setTurnTimer] = useState(40);
-
     const navigate = useNavigate(); 
     
+    const handleNavigate = () => {
+        if(location.pathname === "/chat/game"){
+            navigate(`/chat?room=${room}`); 
+        } else {
+            navigate("/home");
+        }
+    }
+
     // Handle leaving the game page
     useEffect(() => {
         const handleLeaveGame = async() => {
             if (socket && room) {
-                await deleteGame(room, currentUser._id);
-                socket.emit("leave room", {room, username: currentUser.username});
+                await gameApi.deleteGame(room, currentUser._id);
+                if(location.pathname !== "/chat/game"){
+                    socket.emit("leave room", {room, username: currentUser.username});
+                }
                 socket.emit("leave game", {room});
             }
         };
@@ -75,34 +85,47 @@ const Game = () => {
     useEffect(() => {
         const starter = room.split(" ")[0];
         const fetchGameState = async() => {
-            const response = await getGameState(room, currentUser._id);
-            if (response?.error) {
-                // Show user a toast if an error occurs
-                toast.error(response.error, errorGameToasts);
-                return; // Stop execution
-            }
-
-            if(response?.notExists){
-                // setNumDice(5);
+            const {data, error} = await gameApi.getGameState(room, currentUser._id);
+            if(error.status === 404){
                 if(currentUser._id !== starter){
                     setYourTurn(false);
                     toast.info(`${opponent.username} will start`, gameToasts);
                 } else {
                     toast.info(`You'r turn`, gameToasts);
                 }
+                return;                
+            }
+            if(error.status === 502){
+                handleServerErrors(error);
                 return;
             }
+            // const response = await getGameState(room, currentUser._id);
+            // if (response?.error) {
+            //     // Show user a toast if an error occurs
+            //     toast.error(response.error, errorGameToasts);
+            //     return; // Stop execution
+            // }
 
-            setNumDice(response.numDice);
-            setOpponentNumDice(response.opponentNumDice);
-            setYourTurn(response.yourTurn);
-            setOpponentTimes(response.opponentTimes);
-            setOpponentNumber(response.opponentNumber);
-            setDiceArray(response.diceArray);
-            setGameStarted(response.gameStarted);
-            setTurnTimer(response.turnTimer);
-            setShowGameOverPopup(response.showGameOverPopup);
-            setIsWaiting(response.isWaiting);
+            // if(response?.notExists){
+            //     if(currentUser._id !== starter){
+            //         setYourTurn(false);
+            //         toast.info(`${opponent.username} will start`, gameToasts);
+            //     } else {
+            //         toast.info(`You'r turn`, gameToasts);
+            //     }
+            //     return;
+            // }
+
+            setNumDice(data.numDice);
+            setOpponentNumDice(data.opponentNumDice);
+            setYourTurn(data.yourTurn);
+            setOpponentTimes(data.opponentTimes);
+            setOpponentNumber(data.opponentNumber);
+            setDiceArray(data.diceArray);
+            setGameStarted(data.gameStarted);
+            setTurnTimer(data.turnTimer);
+            setShowGameOverPopup(data.showGameOverPopup);
+            setIsWaiting(data.isWaiting);
         }
 
         fetchGameState();
@@ -115,8 +138,11 @@ const Game = () => {
 
         const saveTimerToDB = async (newTime) => {
             const updatedData = { player: currentUser._id ,turnTimer: newTime };
-            await updateGameState(room, updatedData); // 🔥 Save timer to DB
+            const {data, error} = await gameApi.updateGameState(room, updatedData); // 🔥 Save timer to DB
            
+            if(error){
+                handleServerErrors(error);
+            }
         };
         
         if (yourTurn && gameStarted && !showGameOverPopup && !isWaiting) {
@@ -142,7 +168,8 @@ const Game = () => {
                 setIsWaiting("No response... Leaving the game.");
                 socket.emit("leave room", {room, username: currentUser.username});
                 socket.emit("leave game", {room});
-                setTimeout(() => navigate('/home'), 3000); // Redirect after 3s
+                setTimeout(() => handleNavigate(), 3000); // Redirect after 3s
+                //setTimeout(() => navigate('/home'), 3000); // Redirect after 3s
             }, 30000); // 30s timeout
         }
     
@@ -157,7 +184,7 @@ const Game = () => {
 
         const updateGameStartedToDB = async() => {
 
-            const response = await updateGameState(room, {
+            const {data, error} = await gameApi.updateGameState(room, {
                 player: currentUser._id,
                 gameStarted: false,
                 turnTimer: 40,
@@ -165,10 +192,12 @@ const Game = () => {
                 opponentTimes: null
             })
 
-            if(response){
-                setOpponentNumber(null);
-                setOpponentTimes(null);
+            if(error){
+                handleServerErrors(error);
             }
+
+            setOpponentNumber(null);
+            setOpponentTimes(null);
         }
 
         if(gameStarted === false){
@@ -181,8 +210,12 @@ const Game = () => {
     // Let the user know when its his turn
     useEffect(() => {
         const updateYourTurnToDB = async() => {
-            const response = await updateGameState(room, {player: currentUser._id, yourTurn});
-            return response;
+            const {data, error} = await gameApi.updateGameState(room, {player: currentUser._id, yourTurn});
+            if(error){
+                handleServerErrors(error);
+            }
+            
+            return data;
         }
 
         if(gameStarted !== null){
@@ -196,13 +229,17 @@ const Game = () => {
     useEffect(() => {
         const updateNumDiceToDB = async() => {
             const newArray = Array(numDice).fill(1);
-            const response = await updateGameState(room, { player: currentUser._id, numDice})
+            const {data, error} = await gameApi.updateGameState(room, { player: currentUser._id, numDice})
+            if(error){
+                handleServerErrors(error);
+            }
             if(!gameStarted){
                 setDiceArray(newArray);
-                const res = await updateGameState(room, {player: currentUser._id, diceArray: newArray});
-                if(res){
-                    console.log("diceArray changed, updating in DB:", newArray);
+                const {data, error} = await gameApi.updateGameState(room, {player: currentUser._id, diceArray: newArray});
+                if(error){
+                    handleServerErrors(error);
                 }
+                console.log("diceArray changed, updating in DB:", newArray);
             }
         }
 
@@ -215,11 +252,12 @@ const Game = () => {
 
     useEffect(() => {
         const updatePopupDataToDB = async(updatedData) => {
-            const response = await updateGameState(room, updatedData)
+            const {data, error} = await gameApi.updateGameState(room, updatedData)
 
-            if(response){
-                console.log("data saved successfull.");
+            if(error){
+                handleServerErrors(error);
             }
+            console.log("data saved successfull.");
         }
         
         if(isWaiting){
@@ -254,23 +292,25 @@ const Game = () => {
         });
 
         socket.on("opponent left", async({msg}) => {
-            await deleteGame(room, currentUser._id);
+            await gameApi.deleteGame(room, currentUser._id);
             setShowGameOverPopup(false);
             setIsWaiting(msg);
             socket.emit("leave room", {room, username: currentUser.username});
-            setTimeout(() => navigate('/home'), 3000); // Exit after 3s
+            setTimeout(() => handleNavigate(), 3000); // Exit after 3s
+            //setTimeout(() => navigate('/home'), 3000); // Exit after 3s
         });
 
         socket.on("opponent choice", async ({selectedTimes, selectedNumber}) => {
-            const response = await updateGameState(room, {
+            const {data, error} = await gameApi.updateGameState(room, {
                 player: currentUser._id, 
                 opponentTimes: selectedTimes, 
                 opponentNumber: selectedNumber 
             });
-            if(response){
-                setOpponentNumber(selectedNumber);
-                setOpponentTimes(selectedTimes);
+            if(error){
+                handleServerErrors(error);
             }
+            setOpponentNumber(selectedNumber);
+            setOpponentTimes(selectedTimes);
         })
 
         socket.on("turn ended", ()=>{
@@ -287,10 +327,12 @@ const Game = () => {
             toast.info(`${typeOfLost} button bressed!\nYou won!`, errorGameToasts);
             setYourTurn(false);
             setTurnTimer(40);
-            const response = await updateGameState(room, {player: currentUser._id, gameStarted: false});
-            if(response){
-                setGameStarted(false);
+            const {data, error} = await gameApi.updateGameState(room, {player: currentUser._id, gameStarted: false});
+            if(error){
+                handleServerErrors(error);
             }
+            setGameStarted(false);
+
         });
 
         socket.on("game over", () => {
@@ -299,7 +341,7 @@ const Game = () => {
         });
 
         socket.on("start new game", async() => {
-            const response = await updateGameState(room, {
+            const {data, error} = await gameApi.updateGameState(room, {
                 player: currentUser._id,
                 numDice: 5,
                 opponentNumDice: 5,
@@ -308,9 +350,11 @@ const Game = () => {
                 isWaiting: null,
                 showGameOverPopup: null
             })
-            if(response){
-                resetGame(); // Restart game if both players agree
+            if(error){
+                handleServerErrors(error);
             }
+            resetGame(); // Restart game if both players agree
+
         });
 
         socket.on("player reconnected", () => {
@@ -382,13 +426,14 @@ const Game = () => {
         })
 
         socket.on("opponent number of dice", async({num}) => {
-            const response = await updateGameState(room, {
+            const {data, error} = await gameApi.updateGameState(room, {
                 player: currentUser._id, 
                 opponentNumDice: num 
             });
-            if(response){
-                setOpponentNumDice(num);
+            if(error){
+                handleServerErrors(error);
             }
+            setOpponentNumDice(num);
         })
 
         return () => {
@@ -426,18 +471,17 @@ const Game = () => {
         const newDiceArray = diceArray.map(() => Math.floor(Math.random() * 6) + 1);
 
         // Call API to create a game entry in the database
-        const response = await createGame(room, currentUser._id, yourTurn, newDiceArray);
+        const {data, error} = await gameApi.createGame(room, currentUser._id, yourTurn, newDiceArray);
+        //const response = await createGame(room, currentUser._id, yourTurn, newDiceArray);
 
-        if (response?.error) {
-            // Show user a toast if an error occurs
-            toast.error(response.error, errorGameToasts);
-            setRolling(false);
-            return; // Stop execution
+
+        if (error) {
+            handleServerErrors(error);
         }
 
-        if (response?.alreadyExists) {
-            console.log("Game already exists, continuing...");
-        }
+        // if (response?.alreadyExists) {
+        //     console.log("Game already exists, continuing...");
+        // }
 
         // Update UI after a successful game creation
         socket.emit("roll dice", {room});
@@ -450,12 +494,20 @@ const Game = () => {
 
     };
 
+    const handleServerErrors = (error) => {
+        toast.error(error.message, errorGameToasts);
+        window.dispatchEvent(new Event("leaveGame"));
+        setTimeout(() => handleNavigate(), 3000); // Redirect after 3s
+        return; // Stop execution
+    }
+
     const handlePlayAgain = async(response) => {
         if(response === "no"){
-            await deleteGame(room, currentUser._id);
+            await gameApi.deleteGame(room, currentUser._id);
             socket.emit("quit game", {room, username: opponent.username})
             socket.emit("leave room", {room, username: currentUser.username});
-            navigate('/home')
+            handleNavigate();
+            //navigate('/home')
         } else {
             setIsWaiting(`Waiting for ${opponent.username} to answer...`);
             setShowGameOverPopup(false);

@@ -29,7 +29,7 @@ export const login = async (req, res) => {
       
     } catch (error) {
         console.error('Error during login:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: 'An error occurred during Login.\nPlease Try Login Again.' });
     }
 };
 
@@ -62,7 +62,7 @@ export const signup = async (req, res)=>{
             return res.status(409).json({ message: 'Username already exists.' });
         }
         // Handle other errors
-        res.status(500).json({ message: 'An error occurred during registration.', error: error.message });
+        res.status(500).json({ message: 'An error occurred during registration.\n Please try again later.', error: error.message });
     }
 };
 

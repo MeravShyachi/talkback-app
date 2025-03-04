@@ -2,6 +2,7 @@ import User from "../models/User.js";
 
 export const getAll = async(req, res) => {
     try{
+
         const username = req.user.username;
         const currentUser = await User.findOne({username}).select(["username", "_id"]);
         if (!currentUser) {

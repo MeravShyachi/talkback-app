@@ -10,7 +10,6 @@ import { SocketProvider } from "./context/SocketContext";
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {
-  
   const [isAuthenticated, setIsAuthenticated] = useState(!!sessionStorage.getItem("authToken")); // boolean value  
 
   useEffect(() => {
@@ -44,7 +43,15 @@ function App() {
                 } 
               /> 
               <Route 
-                path="/game" 
+                path="/home/game" 
+                element={                  
+                  <AuthProvider>
+                    <Game />
+                  </AuthProvider>
+                } 
+              />
+              <Route 
+                path="/chat/game" 
                 element={                  
                   <AuthProvider>
                     <Game />

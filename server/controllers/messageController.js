@@ -11,6 +11,9 @@ export const getAll = async(req, res) => {
             },
         }).sort({updatedAt: 1});
 
+        if(!messages){
+            return res.status(503).json({ error: "Couldn't load history messages.\n Please try refresh the page or close the chat and reconnect." });
+        }
         const projectedMessages = messages.map((msg) => {
             return {
               fromSelf: msg.sender.toString() === from._id,
@@ -42,6 +45,6 @@ export const addMessage = async(req, res) => {
 
     }catch(err){
         console.log("Failed to add message to the db.", err)
-        res.status(500).json(err);
+        res.status(502).json(err);
     }
 }

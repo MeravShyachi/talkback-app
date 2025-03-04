@@ -42,9 +42,16 @@ const Signup = () => {
         );
         return false;
     }
-    else if(username.length<3){
+    else if(username.length < 3){
       toast.error(
         "Username should be greater than 3 characters.",
+        toastOptions
+      );
+      return false;
+    }
+    else if(username.length > 20){
+      toast.error(
+        "Username should not be greater than 20 characters.",
         toastOptions
       );
       return false;
@@ -62,27 +69,19 @@ const Signup = () => {
 
   const handleSubmit = async(e) => {
     e.preventDefault(); //prevent reload of the page.
-    if(handleValidation()){
-      try{
-          const user = {
-            username: values.username,
-            password: values.password
-          }
-          const res = await authApi.signup(user);
-          console.log('Registration successful:', res.data.accessToken);
-          setSessionAuthToken(res.data.accessToken, res.data.user._id);
-          localStorage.setItem("signup", JSON.stringify({ timestamp: Date.now() }));
-          navigate("/home", { replace: true })
-      }
-      catch(error){
-        if (error.response && error.response.data) {
-          console.error('Error during registration:', error.response.data.message);
-          toast.error(error.response.data.message, toastOptions); // Display error message to the user
-        } else {
-            console.error('Unknown error:', error);
-        }
-      }
+    if(!handleValidation()) return;
+
+    const {data, error} = await authApi.signup(values);
+
+    if(error){
+      toast.error(error.message, toastOptions);
+      return;
     }
+
+    console.log('Registration successful:', data.accessToken);
+    setSessionAuthToken(data.accessToken, data.user._id);
+    localStorage.setItem("signup", JSON.stringify({ timestamp: Date.now() }));
+    navigate("/home", { replace: true })
   };
 
   return (
