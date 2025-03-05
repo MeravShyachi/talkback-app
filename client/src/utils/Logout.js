@@ -1,9 +1,10 @@
 import authApi from "../api/authApi";
 import { removeSessionAuthToken } from "./sessionToken";
 
-export const handleLogout = async() => {
+export const handleLogout = async(event) => {
 
-    const {data, error} = await authApi.logout()
+    //event.preventDefault();
+    const {data, error} = await authApi.logout();
 
     removeSessionAuthToken();
     

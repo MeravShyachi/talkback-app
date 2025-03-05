@@ -11,6 +11,8 @@ const Navbar = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
+
+
     const handleHome = () => {
         window.dispatchEvent(new Event("leaveGame"));
         navigate("/home"); 
