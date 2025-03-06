@@ -17,6 +17,7 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [arrivalMessage, setArrivalMessage] = useState(null);
     const [isMuted, setIsMuted] = useState(false);
+    //useReducer
     const isMutedRef = useRef(isMuted); 
 
     // Fetch messages
@@ -31,13 +32,6 @@ const Chat = () => {
             }
 
             setMessages(data);
-
-            // try {
-            //     const response = await messageApi.getMessages(sender, receiver);
-            //     if (response) setMessages(response.data);
-            // } catch (err) {
-            //     console.error("Couldn't get messages", err);
-            // }
         };
         fetchMessages();
 

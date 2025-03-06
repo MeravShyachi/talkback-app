@@ -43,11 +43,11 @@ const Game = () => {
     useEffect(() => {
         const handleLeaveGame = async() => {
             if (socket && room) {
-                await deleteGame(room, currentUser._id);
                 if(location.pathname !== "/chat/game"){
                     socket.emit("leave room", {room, username: currentUser.username});
                 }
                 socket.emit("leave game", {room});
+                await deleteGame(room, currentUser._id);
             }
         };
     
@@ -64,9 +64,19 @@ const Game = () => {
             if (event.key === "logout") {
                 const logoutData = JSON.parse(event.newValue);
                 if (currentUser?._id === logoutData.userId) {
-                    removeSessionAuthToken();
                     toast.error("You've been logged out. Please log in again.", toastOptions);
-                }
+                    window.dispatchEvent(new Event("leaveGame"));
+                    
+                    setTimeout(() => {
+                        window.dispatchEvent(new Event("leaveGame"));
+                        removeSessionAuthToken();
+
+                        if(location.pathname === "/chat/game"){
+                            window.close();
+                        } else {
+                            navigate("/");
+                        }
+                    }, 4000);}
             }
             if (event.key === "login") {
                 const loginData = JSON.parse(event.newValue);
@@ -88,12 +98,11 @@ const Game = () => {
             const response = await getGameState(room, currentUser._id);
             if (response?.error) {
                 // Show user a toast if an error occurs
-                toast.error(response.error, errorGameToasts);
+                handleServerError(response.error);
                 return; // Stop execution
             }
 
             if(response?.notExists){
-                // setNumDice(5);
                 if(currentUser._id !== starter){
                     setYourTurn(false);
                     toast.info(`${opponent.username} will start`, gameToasts);
@@ -125,8 +134,10 @@ const Game = () => {
 
         const saveTimerToDB = async (newTime) => {
             const updatedData = { player: currentUser._id ,turnTimer: newTime };
-            await updateGameState(room, updatedData); // 🔥 Save timer to DB
-           
+            const res = await updateGameState(room, updatedData); // 🔥 Save timer to DB
+            if(res?.error){
+                handleServerError(res.error);
+            }
         };
         
         if (yourTurn && gameStarted && !showGameOverPopup && !isWaiting) {
@@ -153,7 +164,6 @@ const Game = () => {
                 socket.emit("leave room", {room, username: currentUser.username});
                 socket.emit("leave game", {room});
                 setTimeout(() => handleNavigate(), 3000); // Redirect after 3s
-                //setTimeout(() => navigate('/home'), 3000); // Redirect after 3s
             }, 30000); // 30s timeout
         }
     
@@ -168,7 +178,7 @@ const Game = () => {
 
         const updateGameStartedToDB = async() => {
 
-            const response = await updateGameState(room, {
+            const res = await updateGameState(room, {
                 player: currentUser._id,
                 gameStarted: false,
                 turnTimer: 40,
@@ -176,10 +186,13 @@ const Game = () => {
                 opponentTimes: null
             })
 
-            if(response){
-                setOpponentNumber(null);
-                setOpponentTimes(null);
+            if(res?.error){
+                handleServerError(res.error);
+                return;
             }
+            
+            setOpponentNumber(null);
+            setOpponentTimes(null);
         }
 
         if(gameStarted === false){
@@ -192,8 +205,13 @@ const Game = () => {
     // Let the user know when its his turn
     useEffect(() => {
         const updateYourTurnToDB = async() => {
-            const response = await updateGameState(room, {player: currentUser._id, yourTurn});
-            return response;
+            const res = await updateGameState(room, {player: currentUser._id, yourTurn});
+            if(res?.error){
+                handleServerError(res.error);
+                return;
+            } else {
+                return res;
+            }
         }
 
         if(gameStarted !== null){
@@ -208,12 +226,19 @@ const Game = () => {
         const updateNumDiceToDB = async() => {
             const newArray = Array(numDice).fill(1);
             const response = await updateGameState(room, { player: currentUser._id, numDice})
+            if(response?.error){
+                handleServerError(response.error);
+                return;
+            }
+
             if(!gameStarted){
                 setDiceArray(newArray);
                 const res = await updateGameState(room, {player: currentUser._id, diceArray: newArray});
-                if(res){
-                    console.log("diceArray changed, updating in DB:", newArray);
+                if(res?.error){
+                    handleServerError(res.error);
                 }
+                console.log("diceArray changed, updating in DB:", newArray);
+
             }
         }
 
@@ -226,11 +251,14 @@ const Game = () => {
 
     useEffect(() => {
         const updatePopupDataToDB = async(updatedData) => {
-            const response = await updateGameState(room, updatedData)
+            const res = await updateGameState(room, updatedData)
 
-            if(response){
-                console.log("data saved successfull.");
+            if(res?.error){
+                handleServerError(res.error);
+                return;
             }
+            console.log("data saved successfull.");
+
         }
         
         if(isWaiting){
@@ -265,24 +293,25 @@ const Game = () => {
         });
 
         socket.on("opponent left", async({msg}) => {
-            await deleteGame(room, currentUser._id);
             setShowGameOverPopup(false);
             setIsWaiting(msg);
             socket.emit("leave room", {room, username: currentUser.username});
+            await deleteGame(room, currentUser._id);
             setTimeout(() => handleNavigate(), 3000); // Exit after 3s
-            //setTimeout(() => navigate('/home'), 3000); // Exit after 3s
         });
 
         socket.on("opponent choice", async ({selectedTimes, selectedNumber}) => {
-            const response = await updateGameState(room, {
+            const res = await updateGameState(room, {
                 player: currentUser._id, 
                 opponentTimes: selectedTimes, 
                 opponentNumber: selectedNumber 
             });
-            if(response){
-                setOpponentNumber(selectedNumber);
-                setOpponentTimes(selectedTimes);
+            if(res?.error){
+                handleServerError(res.error);
+                return;
             }
+            setOpponentNumber(selectedNumber);
+            setOpponentTimes(selectedTimes);
         })
 
         socket.on("turn ended", ()=>{
@@ -299,10 +328,13 @@ const Game = () => {
             toast.info(`${typeOfLost} button bressed!\nYou won!`, errorGameToasts);
             setYourTurn(false);
             setTurnTimer(40);
-            const response = await updateGameState(room, {player: currentUser._id, gameStarted: false});
-            if(response){
-                setGameStarted(false);
+            const res = await updateGameState(room, {player: currentUser._id, gameStarted: false});
+            if(res?.error){
+                handleServerError(res.error);
+                return;
             }
+            setGameStarted(false);
+
         });
 
         socket.on("game over", () => {
@@ -311,7 +343,7 @@ const Game = () => {
         });
 
         socket.on("start new game", async() => {
-            const response = await updateGameState(room, {
+            const res = await updateGameState(room, {
                 player: currentUser._id,
                 numDice: 5,
                 opponentNumDice: 5,
@@ -320,9 +352,12 @@ const Game = () => {
                 isWaiting: null,
                 showGameOverPopup: null
             })
-            if(response){
-                resetGame(); // Restart game if both players agree
+            if(res?.error){
+                handleServerError(res.error);
+                return;
             }
+            resetGame(); // Restart game if both players agree
+
         });
 
         socket.on("player reconnected", () => {
@@ -394,13 +429,16 @@ const Game = () => {
         })
 
         socket.on("opponent number of dice", async({num}) => {
-            const response = await updateGameState(room, {
+            const res = await updateGameState(room, {
                 player: currentUser._id, 
                 opponentNumDice: num 
             });
-            if(response){
-                setOpponentNumDice(num);
+            if(res?.error){
+                handleServerError(res.error);
+                return;
             }
+            setOpponentNumDice(num);
+
         })
 
         return () => {
@@ -442,13 +480,8 @@ const Game = () => {
 
         if (response?.error) {
             // Show user a toast if an error occurs
-            toast.error(response.error, errorGameToasts);
-            setRolling(false);
+            handleServerError(response.error);
             return; // Stop execution
-        }
-
-        if (response?.alreadyExists) {
-            console.log("Game already exists, continuing...");
         }
 
         // Update UI after a successful game creation
@@ -464,16 +497,24 @@ const Game = () => {
 
     const handlePlayAgain = async(response) => {
         if(response === "no"){
-            await deleteGame(room, currentUser._id);
             socket.emit("quit game", {room, username: opponent.username})
             socket.emit("leave room", {room, username: currentUser.username});
+            await deleteGame(room, currentUser._id);
             handleNavigate();
-            //navigate('/home')
         } else {
             setIsWaiting(`Waiting for ${opponent.username} to answer...`);
             setShowGameOverPopup(false);
             socket.emit("play again", {room, userId: currentUser._id})
         }
+    }
+
+    const handleServerError = (error) => {
+        toast.error(error, errorGameToasts)
+
+        setTimeout(() => {
+            window.dispatchEvent(new Event("leaveGame"));
+            handleNavigate();
+        }, 4000);
     }
 
     const resetGame = () => {

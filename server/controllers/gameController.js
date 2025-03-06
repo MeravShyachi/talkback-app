@@ -27,7 +27,7 @@ export const updateGameState = async (req, res) => {
 
         res.json(updatedGame);
     } catch (error) {
-        console.log(error);
+        console.log("error in update game state");
         res.status(502).json({ message: "Server error: Error updating game state. \nLeaving the game..", error });
     }
 };
@@ -37,10 +37,11 @@ export const getGameState = async (req, res) => {
     try {
         const game = await Game.findOne({ roomId: req.params.roomId, player: req.query.player});
         if (!game) return res.status(404).json({ message: "Game not found" });
-        res.json(game);
+        
+        res.status(200).json(game);
     } catch (error) {
         console.log(error);
-        res.status(502).json({ message: "Server error", error });
+        res.status(502).json({ message: "Server error: Error fetching the game state. \nLeaving the game..", error });
     }
 };
 

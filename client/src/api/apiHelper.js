@@ -1,6 +1,7 @@
 export const apiRequest = async(axiosCall) => {
     try {
         const response = await axiosCall;
+        console.log("response:", response.data);
         return { data: response.data, error: null };
     } catch (error) {
         console.error("API error:", error.response || error.message);

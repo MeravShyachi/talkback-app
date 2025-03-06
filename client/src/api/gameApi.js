@@ -1,14 +1,4 @@
 import axiosInstance from "./axiosInstance";
-import { apiRequest } from "./apiHelper";
-
-// const gameApi = {
-//     getGameState: (roomId, player) => apiRequest(axiosInstance.get(`/get-game/${roomId}?player=${player}`)),
-//     createGame: (roomId, player, yourTurn, diceArray) => apiRequest(axiosInstance.post("/create-game", {roomId, player, yourTurn, diceArray, gameStarted: true})),
-//     updateGameState: (roomId, updatedData) => apiRequest(axiosInstance.put(`/update-gmae/${roomId}`, updatedData)),
-//     deleteGame: (roomId, player) => axiosInstance.delete(`/delete-game/${roomId}?player=${player}`)
-// }
-
-// export default gameApi;
 
 // Create a new game
 export const createGame = async (roomId, player, yourTurn, diceArray) => {
@@ -16,12 +6,8 @@ export const createGame = async (roomId, player, yourTurn, diceArray) => {
         const response = await axiosInstance.post("/create-game", {roomId, player, yourTurn, diceArray, gameStarted: true});
         return response.data;
     } catch (error) {
-        if(error.status === 400){
-            console.log(error.response.data.message);
-            return { alreadyExists: true };
-        }
         console.error("Error creating game:", error);
-        return { error: "An unexpected error occurred. Please try again." };
+        return { error: error.response.data.message };
     }
 };
 
@@ -32,7 +18,8 @@ export const updateGameState = async (roomId, updatedData) => {
         return response.data;
     } catch (error) {
         console.error("Error updating game state:", error);
-        return null;
+        return { error: error.response.data.message };
+        // return null;
     }
 };
 
@@ -47,7 +34,7 @@ export const getGameState = async (roomId, player) => {
             return { notExists: true }
         }
         console.error("Error fetching game state:", error);
-        return { error: "An unexpected error occurred. Please try again." };
+        return { error: error.response.data.message };
     }
 };
 
