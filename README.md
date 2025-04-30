@@ -22,7 +22,7 @@ A full-stack web application combining real-time chat and an interactive multipl
 ### 1. Clone the repo
 ```bash
 git clone https://github.com/MeravShyachi/talkback-app.git
-cd talkback
+cd talkback-app
 
 ### 2. Install dependencies
 For the server:
@@ -33,7 +33,7 @@ For the client: Open a new terminal tab/window:
 cd client
 npm install
 
-### 3. Start the app
+## Start the app
 In the server terminal:
 npm start
 
